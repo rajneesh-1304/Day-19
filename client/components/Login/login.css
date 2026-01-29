@@ -1,0 +1,16 @@
+.register{
+    margin-top: 25px;
+    font-size: 15px;
+    text-align: center;
+}
+
+.register_link{
+    color: rgb(53, 134, 211);
+    cursor: pointer;
+}
+
+.loginForm{
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}

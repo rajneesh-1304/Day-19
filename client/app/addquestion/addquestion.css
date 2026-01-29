@@ -1,0 +1,49 @@
+.modal_overlay {
+          position: fixed;
+          top: 0;
+          left: 0;
+          width: 100vw;
+          height: 100vh;
+          background: rgba(0,0,0,0.5);
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          z-index: 1000;
+        }
+        .modal {
+          background: white;
+          padding: 2rem;
+          border-radius: 10px;
+          width: 400px;
+          max-width: 90%;
+          display: flex;
+          flex-direction: column;
+          justify-content: center;
+          align-items: center;
+          gap: 10px;
+        }
+        .modal_form input,
+        .modal_form textarea {
+          width: 100%;
+          margin-bottom: 1rem;
+          padding: 0.5rem;
+        }
+        .modal_actions {
+          display: flex;
+          justify-content: center;
+          gap: 2rem;
+        }
+        .submit_btn {
+          background: #4CAF50;
+          color: white;
+          border: none;
+          padding: 0.5rem 1rem;
+          cursor: pointer;
+        }
+        .cancel_btn {
+          background: #f44336;
+          color: white;
+          border: none;
+          padding: 0.5rem 1rem;
+          cursor: pointer;
+        }
