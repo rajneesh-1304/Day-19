@@ -1,51 +1,86 @@
 import {
-  ConflictException,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { Users } from './question.interface';
 import { DataSource } from 'typeorm';
-import { User } from './question.entity';
+import { Question } from './question.entity';
+import { User } from '../users/user.entity';
+import { Tag } from '../tags/tag.entity';
+import { CreateQuestionDto } from './create-question.dto';
 
 @Injectable()
-export class UserService {
-  constructor(private readonly dataSource: DataSource) { }
+export class QuestionService {
+  constructor(private readonly dataSource: DataSource) {}
 
-  async register(data) {
+  async create(dto: CreateQuestionDto) {
+    const questionRepo = this.dataSource.getRepository(Question);
     const userRepo = this.dataSource.getRepository(User);
+    const tagRepo = this.dataSource.getRepository(Tag);
 
-    const existingUser = await userRepo.findOne({
-      where: { email: data.email },
-    });
-    if (existingUser) throw new ConflictException('Email already registered');
-
-    const user = userRepo.create({
-      displayName: data.displayName,
-      email: data.email,
-      timestamp: data.timestamp,
+    const user = await userRepo.findOne({
+      where: { id: dto.userId },
     });
 
-    await userRepo.save(user);
-    return { message: 'User registered successfully' };
-  }
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
 
-  async login(data) {
-    const userRepo = this.dataSource.getRepository(User);
-    const user = await userRepo.findOne({ where: { email: data.email } });
-    if (!user) throw new NotFoundException('User not found');
+    const tags: Tag[] = [];
+
+    for (const tagName of dto.tags) {
+      const normalized = tagName.toLowerCase();
+
+      let tag = await tagRepo.findOne({
+        where: { name: normalized },
+      });
+
+      if (!tag) {
+        tag = tagRepo.create({ name: normalized });
+        await tagRepo.save(tag);
+      }
+
+      tags.push(tag);
+    }
+
+    const question = questionRepo.create({
+      title: dto.title,
+      description: dto.description,
+      type: dto.type,
+      user,
+      tags,
+    });
+
+    await questionRepo.save(question);
 
     return {
-      message: 'User logged in successfully',
-      user: {
-        id: user.id,
-        email: user.email,
-      },
+      message: 'Question created successfully',
+      questionId: question.id,
     };
   }
 
   async getAll() {
-    const userRepo = this.dataSource.getRepository(User);
-    return await userRepo.find();
-  }
+    const questionRepo = this.dataSource.getRepository(Question);
 
+    return questionRepo.find({
+      relations: ['user', 'tags'],
+      select: {
+        id: true,
+        title: true,
+        description: true,
+        type: true,
+        createdAt: true,
+        user: {
+          id: true,
+          displayName: true,
+        },
+        tags: {
+          id: true,
+          name: true,
+        },
+      },
+      order: {
+        createdAt: 'DESC',
+      },
+    });
+  }
 }

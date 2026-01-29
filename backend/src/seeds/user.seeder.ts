@@ -1,21 +1,34 @@
-// import { Seeder } from 'typeorm-extension';
-// import { DataSource } from 'typeorm';
-// import { User } from '../users/user.entity';
-// import * as bcrypt from 'bcrypt';
+import { Seeder } from 'typeorm-extension';
+import { DataSource } from 'typeorm';
+import { Tag } from '../tags/tag.entity';
 
-// export default class UserSeeder implements Seeder {
-//   public async run(dataSource: DataSource): Promise<any> {
-//     const repository = dataSource.getRepository(User);
+export default class TagSeeder implements Seeder {
+  public async run(dataSource: DataSource): Promise<void> {
+    const tagRepository = dataSource.getRepository(Tag);
 
-//     const hashedPassword = await bcrypt.hash('12345678', 10);
+    const tags = [
+      { name: 'javascript' },
+      { name: 'typescript' },
+      { name: 'react' },
+      { name: 'nextjs' },
+      { name: 'nestjs' },
+      { name: 'nodejs' },
+      { name: 'backend' },
+      { name: 'frontend' },
+      { name: 'database' },
+      { name: 'postgresql' },
+    ];
 
-//     await repository.insert([
-//       {
-//         email: 'admin@gmail.com',
-//         password: hashedPassword,
-//         name: 'Admin',
-//         role: 'ADMIN',
-//       },
-//     ]);
-//   }
-// }
+    for (const tag of tags) {
+      const exists = await tagRepository.findOne({
+        where: { name: tag.name },
+      });
+
+      if (!exists) {
+        await tagRepository.save(tagRepository.create(tag));
+      }
+    }
+
+    console.log('Tags seeded successfully');
+  }
+}

@@ -1,24 +1,44 @@
-import { Entity, Column, PrimaryGeneratedColumn } from 'typeorm';
+import {
+  Entity,
+  Column,
+  PrimaryGeneratedColumn,
+  ManyToOne,
+  ManyToMany,
+  JoinColumn,
+  JoinTable,
+  CreateDateColumn,
+} from 'typeorm';
+import { User } from '../users/user.entity';
+import { Tag } from '../tags/tag.entity';
 
-@Entity('question')
-export class User {
+@Entity('questions')
+export class Question {
   @PrimaryGeneratedColumn()
   id: number;
 
   @Column()
   title: string;
-  
-  @Column()
+
+  @Column('text')
   description: string;
-
-  
-
-  @Column()
-  // tag: string[];
 
   @Column()
   type: string;
 
-  @Column()
-  userId: number;
+  @CreateDateColumn()
+  createdAt: Date;
+
+  @ManyToOne(() => User, (user) => user.questions, {
+    onDelete: 'CASCADE',
+  })
+  @JoinColumn({ name: 'userId' })
+  user: User;
+
+  @ManyToMany(() => Tag, (tag) => tag.questions, {
+    cascade: true,
+  })
+  @JoinTable({
+    name: 'question_tags',
+  })
+  tags: Tag[];
 }

@@ -1,152 +1,138 @@
 "use client";
 
-import { useForm, Controller } from "react-hook-form";
+import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { useDispatch, useSelector } from "react-redux";
 import { AppDispatch, RootState } from "@/app/redux/store";
-import { addProductThunk } from "@/app/redux/features/products/productSlice";
-import { Box, Button, FormControl, Snackbar, TextField } from "@mui/material";
-import "./addquestion.css";
+import { createQuestionThunk } from "@/app/redux/features/questions/questionSlice";
+import { Box, Button, FormControl, MenuItem, Snackbar, TextField } from "@mui/material";
 import { useState } from "react";
+import "./addquestion.css";
 
-type AddProductModalProps = {
+type AddQuestionModalProps = {
   onClose: () => void;
 };
 
 const questionSchema = z.object({
   title: z.string().min(15, "Title must be at least 15 characters"),
   description: z.string().min(100, "Description must be at least 100 characters"),
-  tag: z.string(),
-  type: z.string().min(2, "type must be at least 2 characters"),
+  tags: z.string().min(1, "At least one tag is required"),
+  type: z.string().min(2, "Type must be at least 2 characters"),
 });
 
-type ProductFormData = z.infer<typeof questionSchema>;
+type QuestionFormData = z.infer<typeof questionSchema>;
 
-export default function AddQuestion({ onClose }: AddProductModalProps) {
+export default function AddQuestion({ onClose }: AddQuestionModalProps) {
   const dispatch = useDispatch<AppDispatch>();
+  const user = useSelector((state: RootState) => state.users.currentUser);
+
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState("");
-  const user = useSelector((state: RootState) => state.users.currentUser);
+
   const {
     register,
     handleSubmit,
     formState: { errors },
     reset,
-    control,
-  } = useForm<ProductFormData>({
+  } = useForm<QuestionFormData>({
     resolver: zodResolver(questionSchema),
-    defaultValues: {
-    },
+    defaultValues: { title: "", description: "", tags: "", type: "" },
   });
 
-  const onSubmit = async (formData: ProductFormData) => {
+  const onSubmit = async (data: QuestionFormData) => {
     if (!user) return;
-    
-    const formDataToSend = new FormData();
-    formDataToSend.append("title", formData.title);
-    formDataToSend.append("description", formData.description);
-    formDataToSend.append("tag", formData.tag.toString());
-    formDataToSend.append("type", formData.type);
-    formDataToSend.append("sellerId", String(user.id));
+
+    const payload = {
+      title: data.title,
+      description: data.description,
+      tags: data.tags.split(",").map((t) => t.trim()),
+      type: data.type,
+      userId: user.id,
+    };
 
     try {
-      await dispatch(addProductThunk(formDataToSend as any)).unwrap();
-      setSnackbarMessage("Product added successfully!");
+      await dispatch(createQuestionThunk(payload)).unwrap();
+      setSnackbarMessage("Question added successfully!");
       setSnackbarOpen(true);
-      setTimeout(() => {
-        onClose();
-      }, 1000);
+      setTimeout(onClose, 1000);
+      reset();
     } catch (error: any) {
-      setSnackbarMessage(error.message || "Error in adding product");
+      setSnackbarMessage(error.message || "Error adding question");
       setSnackbarOpen(true);
     }
-    reset();
   };
-
 
   const handleClose = (event: React.SyntheticEvent | Event, reason?: string) => {
     if (reason === "clickaway") return;
     setSnackbarOpen(false);
   };
 
-
   return (
     <div className="modal_overlay">
       <div className="modal">
         <h2>Add Question</h2>
-        <form onSubmit={handleSubmit(onSubmit)} className="modal_form">
-          <Box
-            sx={{
-              display: "flex",
-              flexDirection: "column",
-              width: 350,
-              gap: 0.75,
-            }}
-          >
+        <form onSubmit={handleSubmit(onSubmit)}>
+          <Box sx={{ display: "flex", flexDirection: "column", width: 350, gap: 1 }}>
             <FormControl variant="standard">
               <TextField
                 label="Title"
-                variant="outlined"
-                size="small"
                 {...register("title")}
                 error={!!errors.title}
                 helperText={errors.title?.message}
+                size="small"
               />
             </FormControl>
 
             <FormControl variant="standard">
               <TextField
                 label="Description"
-                variant="outlined"
-                size="small"
                 {...register("description")}
                 error={!!errors.description}
                 helperText={errors.description?.message}
-              />
-            </FormControl>
-
-            <FormControl variant="standard">
-              <TextField
-                label="Tag"
-                type="number"
                 size="small"
-                variant="outlined"
-                {...register("tag", { valueAsNumber: true })}
-                error={!!errors.tag}
-                helperText={errors.tag?.message}
+                multiline
+                rows={4}
               />
             </FormControl>
 
             <FormControl variant="standard">
               <TextField
+                label="Tags (comma separated)"
+                {...register("tags")}
+                error={!!errors.tags}
+                helperText={errors.tags?.message}
+                size="small"
+              />
+            </FormControl>
+
+            <FormControl variant="standard" fullWidth>
+              <TextField
+                select
                 label="Type"
-                variant="outlined"
-                size="small"
                 {...register("type")}
                 error={!!errors.type}
                 helperText={errors.type?.message}
-              />
+                size="small"
+              >
+                <MenuItem value="public">Public</MenuItem>
+                <MenuItem value="private">Private</MenuItem>
+              </TextField>
             </FormControl>
 
-            <div className="modal_actions">
-              <Button variant="contained" sx={{ mt: 1, width: 200 }} type="submit">
+
+            <Box sx={{ display: "flex", gap: 1, mt: 2 }}>
+              <Button variant="contained" type="submit" sx={{ flex: 1 }}>
                 Save
               </Button>
-              <Button variant="contained" sx={{ mt: 1, width: 200 }} type="submit">
-                Draft
-              </Button>
-              <Button
-                variant="outlined"
-                sx={{ mt: 1, width: 200 }}
-                onClick={() => onClose()}
-              >
+              <Button variant="outlined" onClick={onClose} sx={{ flex: 1 }}>
                 Cancel
               </Button>
-            </div>
+            </Box>
           </Box>
         </form>
       </div>
+
       <Snackbar
         open={snackbarOpen}
         autoHideDuration={2000}

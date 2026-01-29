@@ -77,7 +77,6 @@ export default function RegisterForm() {
       const registerData = {
         displayName: user.displayName,
         email: user.email,
-        timestamp: Date.now(),
       };
 
       const registerResponse = await dispatch(registerThunk(registerData));
@@ -89,10 +88,15 @@ export default function RegisterForm() {
         setSnackbarOpen(true);
         router.push('/login')
       }
-    } catch (error) {
-      console.error(error);
-      setSnackbarMessage('Email already exists, please sign in');
-      setSnackbarOpen(true);
+    } catch (error: any) {
+       const message =
+      error?.message?.includes("Email already registered") ||
+      error?.response?.data?.message?.includes("Email already registered")
+        ? "User already exists, please login"
+        : "Something went wrong";
+
+    setSnackbarMessage(message);
+    setSnackbarOpen(true);
     }
   };
 
@@ -109,7 +113,6 @@ export default function RegisterForm() {
       const registerData = {
         displayName: user.displayName,
         email: user.email,
-        timestamp: Date.now(),
       };
 
       const registerResponse = await dispatch(registerThunk(registerData));
@@ -121,10 +124,15 @@ export default function RegisterForm() {
         setSnackbarOpen(true);
         router.push('/login')
       }
-    } catch (error) {
-      console.error(error);
-      setSnackbarMessage("Failed with github");
-      setSnackbarOpen(true);
+    } catch (error : any) {
+       const message =
+      error?.message?.includes("Email already registered") ||
+      error?.response?.data?.message?.includes("Email already registered")
+        ? "User already exists, please login"
+        : "Something went wrong";
+
+    setSnackbarMessage(message);
+    setSnackbarOpen(true);
     }
   }
 
@@ -140,7 +148,6 @@ export default function RegisterForm() {
       const dat = {
         displayName: data.name,
         email: data.email,
-        timestamp: Date.now(),
       }
       await dispatch(registerThunk(dat));
       setSnackbarMessage('User created successfully!');
@@ -150,8 +157,14 @@ export default function RegisterForm() {
       }, 1200);
     }
     catch (err: any) {
-      setSnackbarMessage(err.message);
-      setSnackbarOpen(true);
+      const message =
+      err?.message?.includes("email-already-in-use") || 
+      err?.response?.data?.message?.includes("Email already registered") 
+        ? "User already exists, please login"
+        : err?.message || "Registration failed";
+
+    setSnackbarMessage(message);
+    setSnackbarOpen(true);
     }
   };
 

@@ -8,7 +8,4 @@ export class UsersDefinition {
   @IsEmail()
   @IsNotEmpty()
   email: string;
-
-  @IsNotEmpty()
-  timestamp: string;
 }

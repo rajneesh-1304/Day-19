@@ -1,5 +1,5 @@
-import { Question } from '../questions/question.interface';
-import { Entity, Column, PrimaryGeneratedColumn, OneToMany } from 'typeorm';
+import { Entity, Column, PrimaryGeneratedColumn, OneToMany, CreateDateColumn } from 'typeorm';
+import { Question } from '../questions/question.entity';
 
 @Entity('users')
 export class User {
@@ -8,16 +8,13 @@ export class User {
 
   @Column()
   displayName: string;
-  
+
   @Column({ unique: true })
   email: string;
 
-  @Column()
-  timestamp: string
+  @CreateDateColumn()
+  createdAt: Date;
 
-  @OneToMany(() => Question, question => question, {
-    cascade: true,
-    eager: true,
-  })
-  question: Question[];
+  @OneToMany(() => Question, (question) => question.user)
+  questions: Question[];
 }

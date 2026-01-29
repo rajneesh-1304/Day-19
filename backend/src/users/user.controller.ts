@@ -16,7 +16,6 @@ export class UserController {
 
   @Post('register')
   registerUser(@Body() userData: UsersDefinition) {
-    console.log('fdasd', userData)
     return this.userService.register(userData);
   }
 

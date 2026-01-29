@@ -39,7 +39,7 @@ interface RootState {
 export default function LoginForm() {
   const dispatch = useDispatch<AppDispatch>();
   const router = useRouter();
-  const err = useAppSelector(state => state.users.error)
+  const err = useAppSelector((state: any) => state.users.error)
 
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState("");
@@ -115,7 +115,7 @@ export default function LoginForm() {
       }
     } catch (error) {
       console.error(error);
-      setSnackbarMessage("Google sign-in failed");
+      setSnackbarMessage("GitHub sign-in failed");
       setSnackbarOpen(true);
     }
   }
@@ -138,10 +138,18 @@ export default function LoginForm() {
         setSnackbarOpen(true);
       }
 
-    } catch (error) {
-      setSnackbarMessage("User not registered");
-      setSnackbarOpen(true);
-    }
+    } catch (error: any) {
+  const message =
+    error.code === "auth/user-not-found"
+      ? "User not registered"
+      : error.code === "auth/wrong-password"
+      ? "Incorrect password"
+      : "Login failed";
+
+  setSnackbarMessage(message);
+  setSnackbarOpen(true);
+}
+
   };
 
   return (

@@ -1,27 +1,18 @@
-import { Controller, Get, Post, Body, Delete, } from '@nestjs/common';
-import { UserService } from './question.service';
-import { UsersDefinition } from './DTO/user';
-import { LoginUserDto } from './DTO/login';
-import { Param } from '@nestjs/common';
-import { Patch } from '@nestjs/common';
+import { Controller, Post, Body, Get } from '@nestjs/common';
+import { QuestionService } from './question.service';
+import { CreateQuestionDto } from './create-question.dto';
 
-@Controller('auth')
-export class UserController {
-  constructor(private readonly userService: UserService) { }
+@Controller('questions')
+export class QuestionController {
+  constructor(private readonly questionService: QuestionService) {}
 
-  @Post('login')
-  loginUser(@Body() loginDto: LoginUserDto) {
-    return this.userService.login(loginDto);
-  }
-
-  @Post('register')
-  registerUser(@Body() userData: UsersDefinition) {
-    console.log('fdasd', userData)
-    return this.userService.register(userData);
+  @Post()
+  createQuestion(@Body() dto: CreateQuestionDto) {
+    return this.questionService.create(dto);
   }
 
   @Get()
-  getAll() {
-    return this.userService.getAll();
+  getAllQuestions() {
+    return this.questionService.getAll();
   }
 }

@@ -12,10 +12,8 @@ import {
 } from "redux-persist";
 import storage from "redux-persist/lib/storage";
 import usersReducer from "./features/users/userSlice";
-import productReducer from './features/products/productSlice'
 import searchReducer from './features/search/searchSlice'
-import imageReducer from './features/imageSlice';
-import couponReducer from './features/couponSlice'
+import questionReducer from './features/questions/questionSlice'
 
 const persistConfig = {
   key: "root",
@@ -25,10 +23,8 @@ const persistConfig = {
 
 const rootReducer = combineReducers({
   users: usersReducer,
-  products: productReducer,
   search:searchReducer,
-  image: imageReducer,
-  coupon: couponReducer,
+  questions: questionReducer,
 });
 
 const persistedReducer = persistReducer(persistConfig, rootReducer);
