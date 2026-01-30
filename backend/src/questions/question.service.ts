@@ -83,4 +83,37 @@ export class QuestionService {
       },
     });
   }
+
+  async getQuestionById (id:number){
+    const questionRepo = this.dataSource.getRepository(Question);
+
+    const question = await questionRepo.findOne({
+      where:{id: id},
+      relations: ['user', 'tags'],
+      select: {
+        id: true,
+        title: true,
+        description: true,
+        type: true,
+        createdAt: true,
+        user: {
+          id: true,
+          displayName: true,
+        },
+        tags: {
+          id: true,
+          name: true,
+        },
+      },
+      order: {
+        createdAt: 'DESC',
+      },
+    });
+
+    if(!question){
+      throw new NotFoundException('Question not found');
+    }
+    console.log(question);
+    return question;
+  }
 }

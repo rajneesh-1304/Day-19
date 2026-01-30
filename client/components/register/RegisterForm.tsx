@@ -17,7 +17,7 @@ import IconButton from "@mui/material/IconButton";
 import MenuItem from "@mui/material/MenuItem";
 import Select from "@mui/material/Select";
 import { Visibility, VisibilityOff } from "@mui/icons-material";
-import { auth, provider, db, githubprovider } from "../../app/config/firebase";
+import { auth, provider, db, gitProvider } from "../../app/config/firebase";
 import { createUserWithEmailAndPassword, signInWithPopup } from "firebase/auth";
 import { collection, addDoc, serverTimestamp, setDoc, doc, } from "firebase/firestore";
 import { useRouter } from "next/navigation";
@@ -89,20 +89,20 @@ export default function RegisterForm() {
         router.push('/login')
       }
     } catch (error: any) {
-       const message =
-      error?.message?.includes("Email already registered") ||
-      error?.response?.data?.message?.includes("Email already registered")
-        ? "User already exists, please login"
-        : "Something went wrong";
+      const message =
+        error?.message?.includes("Email already registered") ||
+          error?.response?.data?.message?.includes("Email already registered")
+          ? "User already exists, please login"
+          : "Something went wrong";
 
-    setSnackbarMessage(message);
-    setSnackbarOpen(true);
+      setSnackbarMessage(message);
+      setSnackbarOpen(true);
     }
   };
 
   const handleSignInGithub = async () => {
     try {
-      const result = await signInWithPopup(auth, githubprovider);
+      const result = await signInWithPopup(auth, gitProvider);
       const user = result.user;
       console.log(user)
 
@@ -111,7 +111,9 @@ export default function RegisterForm() {
       }
 
       const registerData = {
-        displayName: user.displayName,
+        displayName: user.
+          reloadUserInfo
+          .screenName,
         email: user.email,
       };
 
@@ -124,15 +126,15 @@ export default function RegisterForm() {
         setSnackbarOpen(true);
         router.push('/login')
       }
-    } catch (error : any) {
-       const message =
-      error?.message?.includes("Email already registered") ||
-      error?.response?.data?.message?.includes("Email already registered")
-        ? "User already exists, please login"
-        : "Something went wrong";
+    } catch (error: any) {
+      const message =
+        error?.message?.includes("Email already registered") ||
+          error?.response?.data?.message?.includes("Email already registered")
+          ? "User already exists, please login"
+          : "Something went wrong";
 
-    setSnackbarMessage(message);
-    setSnackbarOpen(true);
+      setSnackbarMessage(message);
+      setSnackbarOpen(true);
     }
   }
 
@@ -158,13 +160,13 @@ export default function RegisterForm() {
     }
     catch (err: any) {
       const message =
-      err?.message?.includes("email-already-in-use") || 
-      err?.response?.data?.message?.includes("Email already registered") 
-        ? "User already exists, please login"
-        : err?.message || "Registration failed";
+        err?.message?.includes("email-already-in-use") ||
+          err?.response?.data?.message?.includes("Email already registered")
+          ? "User already exists, please login"
+          : err?.message || "Registration failed";
 
-    setSnackbarMessage(message);
-    setSnackbarOpen(true);
+      setSnackbarMessage(message);
+      setSnackbarOpen(true);
     }
   };
 
@@ -188,16 +190,10 @@ export default function RegisterForm() {
 
 
   return (
-    <div>
-      <form onSubmit={handleSubmit(onSubmit)}>
-        <Box
-          sx={{
-            display: "flex",
-            flexDirection: "column",
-            width: 300,
-            gap: 0.5,
-          }}
-        >
+    <div className="main-form">
+      <form className="formm" onSubmit={handleSubmit(onSubmit)}>
+        <h1 className='register_heading'>Create Account</h1>
+        <Box sx={{ display: "flex", flexDirection: "column", width: 300, gap: 1, mt: 1 , padding: 1, paddingBottom: 1}}>
 
           <FormControl variant="standard">
             <TextField
@@ -254,12 +250,12 @@ export default function RegisterForm() {
           message={snackbarMessage}
         ></Snackbar>
       </form>
-      <Button variant="contained" sx={{ mt: 1.5, borderRadius: "500px", width: 300, }} onClick={handleSignIn}>
-        Sign in With Google
+      <Button variant="contained" sx={{ mt: 1.5,  width: 320, }} onClick={handleSignIn}>
+        Sign Up With Google
       </Button>
 
-      <Button variant="contained" sx={{ mt: 1.5, borderRadius: "500px", width: 300, }} onClick={handleSignInGithub}>
-        Sign in With Github
+      <Button variant="contained" sx={{ mt: 1.5,  width: 320, }} onClick={handleSignInGithub}>
+        Sign Up With Github
       </Button>
 
 

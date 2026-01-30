@@ -5,6 +5,8 @@ import { UserModule } from './users/user.module';
 import { Question } from './questions/question.entity';
 import { Tag } from './tags/tag.entity';
 import { QuestionModule } from './questions/question.module';
+import { AnswerModule } from './answers/answer.module';
+import { Answer } from './answers/answer.entity';
 @Controller()
 class AppController {
   @Get()
@@ -20,16 +22,17 @@ class AppController {
       host: 'localhost',
       port: 5432,
       username: 'postgres',
-      password: '1234',
+      password: 'admin',
       database: 'stack',
       entities: [
-        User, Question, Tag
+        User, Question, Tag, Answer
       ],
       synchronize: false,
       migrations: [__dirname + '/migrations/*{.ts,.js}'],
     }),
     UserModule,
     QuestionModule,
+    AnswerModule,
   ],
   controllers: [AppController],
 })

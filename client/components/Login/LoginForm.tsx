@@ -13,7 +13,7 @@ import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
 import "./login.css";
-import { auth, db, githubprovider, provider } from "../../app/config/firebase";
+import { auth, db, gitProvider, provider } from "../../app/config/firebase";
 import { signInWithEmailAndPassword, signInWithPopup } from "firebase/auth";
 import { useDispatch } from "react-redux";
 import { AppDispatch } from "@/app/redux/store";
@@ -95,7 +95,7 @@ export default function LoginForm() {
 
   const handleSignInGithub = async () => {
     try {
-      const result = await signInWithPopup(auth, githubprovider);
+      const result = await signInWithPopup(auth, gitProvider);
       const user = result.user;
 
       const loginData = {
@@ -153,9 +153,27 @@ export default function LoginForm() {
   };
 
   return (
-    <div>
-      <form onSubmit={handleSubmit(onSubmit)}>
-        <Box sx={{ display: "flex", flexDirection: "column", width: 300, gap: 1.5, mt: 4 }}>
+    <div className="main-form">
+
+      <Button
+        variant="contained"
+        sx={{ mt: 4, width: 320,}}
+        onClick={handleSignIn}
+      >
+        Sign in With Google
+      </Button>
+
+      <Button
+        variant="contained"
+        sx={{ mt: 1.5, width: 320, marginBottom: 4}}
+        onClick={handleSignInGithub}
+      >
+        Sign in With Github
+      </Button>
+
+      <form className="formm" onSubmit={handleSubmit(onSubmit)}>
+        <h1 className='register_heading'>Login</h1>
+        <Box sx={{ display: "flex", flexDirection: "column", width: 300, gap: 1, mt: 1 , padding: 1, paddingBottom: 1}}>
           <FormControl variant="standard">
             <TextField
               label="Email"
@@ -190,23 +208,11 @@ export default function LoginForm() {
             Login
           </Button>
         </Box>
+
+        
       </form>
 
-      <Button
-        variant="contained"
-        sx={{ mt: 4, width: 300, borderRadius: "500px" }}
-        onClick={handleSignIn}
-      >
-        Sign in With Google
-      </Button>
-
-      <Button
-        variant="contained"
-        sx={{ mt: 4, width: 300, borderRadius: "500px" }}
-        onClick={handleSignInGithub}
-      >
-        Sign in With Github
-      </Button>
+      
       <div className="register">
         <p>
           Not Registered{" "}

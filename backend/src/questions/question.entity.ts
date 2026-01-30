@@ -7,9 +7,11 @@ import {
   JoinColumn,
   JoinTable,
   CreateDateColumn,
+  OneToMany,
 } from 'typeorm';
 import { User } from '../users/user.entity';
 import { Tag } from '../tags/tag.entity';
+import { Answer } from '../answers/answer.entity';
 
 @Entity('questions')
 export class Question {
@@ -41,4 +43,7 @@ export class Question {
     name: 'question_tags',
   })
   tags: Tag[];
+
+  @OneToMany(() => Answer, (answer) => answer.question)
+    answers: Answer[];
 }

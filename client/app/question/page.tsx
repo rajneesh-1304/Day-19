@@ -55,9 +55,11 @@ const QuestionsPage = () => {
                 <div className='question-list'>
                     {currentQuestions && currentQuestions.length > 0 ? (
                         currentQuestions.map(q => (
-                            <Box key={q.id} className='question-item' sx={{ p: 2, mb: 1, border: '1px solid #ccc', borderRadius: 2 }}>
+                           <div onClick={()=>router.push(`/question/${q.id}`)}>
+                             <Box key={q.id} className='question-item' sx={{ p: 2, mb: 1, border: '1px solid #ccc', borderRadius: 2 }}>
                                 <h3>{q.title}</h3>
-                                <p>{q.description}</p>
+                                <div dangerouslySetInnerHTML={{ __html: q?.description }} />
+                                {/* <p>{q.description}</p> */}
                                 <p>
                                     <strong>Author:</strong> {q.user.displayName}
                                 </p>
@@ -65,6 +67,7 @@ const QuestionsPage = () => {
                                     <strong>Tags:</strong> {q.tags.map(tag => tag.name).join(', ')}
                                 </p>
                             </Box>
+                           </div>
                         ))
                     ) : (
                         <p>No public questions available</p>

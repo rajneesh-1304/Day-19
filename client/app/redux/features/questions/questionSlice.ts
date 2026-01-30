@@ -1,5 +1,5 @@
 import { createSlice, createAsyncThunk, PayloadAction } from "@reduxjs/toolkit";
-import { fetchQuestions, createQuestion } from "./questionService";
+import { fetchQuestions, createQuestion, getQuestionId } from "./questionService";
 
 export interface Tag {
   id: number;
@@ -23,12 +23,14 @@ export interface Question {
 
 interface QuestionsState {
   questions: Question[];
+  currentQuestion: Question | null;
   loading: boolean;
   error: string | null;
 }
 
 const initialState: QuestionsState = {
   questions: [],
+  currentQuestion: null,
   loading: false,
   error: null,
 };
@@ -60,6 +62,17 @@ export const createQuestionThunk = createAsyncThunk(
     }
   }
 );
+
+export const getQuestionById = createAsyncThunk(
+  "question/getbyId",
+  async (id: string, { rejectWithValue })=>{
+    try {
+      return await getQuestionId(id);
+    } catch (err: any) {
+      return rejectWithValue(err?.message || "Failed to create question");
+    }
+  }
+)
 
 const questionsSlice = createSlice({
   name: "questions",
@@ -94,6 +107,19 @@ const questionsSlice = createSlice({
         state.loading = false;
       })
       .addCase(createQuestionThunk.rejected, (state, action) => {
+        state.loading = false;
+        state.error = String(action.payload);
+      })
+
+      .addCase(getQuestionById.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(getQuestionById.fulfilled, (state, action) => {
+        state.currentQuestion = action.payload;
+        state.loading = false;
+      })
+      .addCase(getQuestionById.rejected, (state, action) => {
         state.loading = false;
         state.error = String(action.payload);
       });

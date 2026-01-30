@@ -13,25 +13,15 @@
   background-color: #f1f3f6;
 }
 
-.register_formm {
-  width: 320px;
-  height: 520px;
-  padding: 40px;
-  padding-top: 60px;
-  background-color: #2874F0;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-}
 
 .login_form {
   width: 400px;
-  height: 520px;
+  height: 600px;
   padding: 28px 26px 32px;
-  background-color: #ffffff;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
   display: flex;
   flex-direction: column;
+  align-items: center;
+  justify-content: center;
 }
 
 .head {
@@ -51,7 +41,8 @@
 
 .logo {
   margin-top: auto;
-  height: 180px;
+  height: 150px;
+  width: 250px;
 }
 
 .login_heading {
