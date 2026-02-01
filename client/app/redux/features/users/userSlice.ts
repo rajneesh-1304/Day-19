@@ -9,14 +9,12 @@ interface User {
 }
 
 interface UserState {
-  userData: User[];
   currentUser: User | null;
   loading: boolean;
   error: string | null;
 }
 
 const initialState: UserState = {
-  userData: [],
   currentUser: null,
   loading: false,
   error: null,
@@ -56,7 +54,6 @@ const usersSlice = createSlice({
     },
 
     clearUsers: (state) => {
-      state.userData = [];
       state.currentUser = null;
       state.error = null;
       state.loading = false;
@@ -70,10 +67,8 @@ const usersSlice = createSlice({
       })
       .addCase(registerThunk.fulfilled, (state, action) => {
         state.loading = false;
-        state.userData = action.payload.userData;
       })
       .addCase(registerThunk.rejected, (state, action) => {
-        state.loading = false;
         state.error = action.error.message || "Registration failed";
       })
       .addCase(loginThunk.pending, (state) => {
@@ -81,11 +76,11 @@ const usersSlice = createSlice({
         state.error = null;
       })
       .addCase(loginThunk.fulfilled, (state, action: PayloadAction<any>) => {
-        state.loading = false;
+        // state.loading = false;
         state.currentUser = action.payload.user;
       })
       .addCase(loginThunk.rejected, (state, action) => {
-        state.loading = false;
+        // state.loading = false;
         state.error = String(action.payload) || "Login failed";
       });
 

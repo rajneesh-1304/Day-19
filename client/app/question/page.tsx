@@ -1,94 +1,255 @@
-'use client'
-import React, { useEffect, useState } from 'react'
-import './question.css'
-import { useRouter } from 'next/navigation'
-import { useAppSelector, useAppDispatch } from '../redux/hooks'
-import AddQuestion from '../addquestion/AddQuestion'
-import { fetchQuestionsThunk } from '../redux/features/questions/questionSlice'
-import { Box, Button, Stack } from '@mui/material'
+'use client';
+
+import React, { useEffect, useRef, useState, useCallback } from 'react';
+import { useRouter } from 'next/navigation';
+import './question.css';
+import { useAppDispatch, useAppSelector } from '../redux/hooks';
+import {
+  fetchQuestionsThunk,
+  upvoteQuestionThunk,
+  downvoteQuestionThunk
+} from '../redux/features/questions/questionSlice';
+import AddQuestion from '../addquestion/AddQuestion';
+import { fetchTagsThunk } from '../redux/features/tags/tagSlice';
+
+const LIMIT = 5;
 
 const QuestionsPage = () => {
-    const router = useRouter();
-    const dispatch = useAppDispatch();
-    const user = useAppSelector(state => state.users.currentUser);
-    const questions = useAppSelector(state => state.questions.questions);
-    const [isModalOpen, setIsModalOpen] = useState(false);
+  const router = useRouter();
+  const dispatch = useAppDispatch();
 
-    const [currentPage, setCurrentPage] = useState(1);
-    const questionsPerPage = 5;
+  const user = useAppSelector(state => state.users.currentUser);
+  const questions = useAppSelector(state => state.questions.questions);
+  const loading = useAppSelector(state => state.questions.loading);
+  const searchValue = useAppSelector(state => state.search.searchValue);
+  const tagAll = useAppSelector(state => state.tags.tags);
+  const [dropdownOpen, setDropdownOpen] = useState(false);
 
-    useEffect(() => {
-        dispatch(fetchQuestionsThunk());
-    }, [dispatch]);
+  const [page, setPage] = useState(1);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [hasMore, setHasMore] = useState(true);
 
-    const handleAdd = () => {
-        if(!user){
-            router.push('/login');
-            return;
-        }
-        setIsModalOpen(true);
+  const [selectedTags, setSelectedTags] = useState<string[]>([]);
+  const [sort, setSort] = useState<'newest' | 'score'>('newest');
+
+  const listRef = useRef<HTMLDivElement | null>(null);
+
+  const requireAuth = (action: () => void) => {
+    if (!user) {
+      router.push('/login');
+      return;
     }
+    action();
+  };
 
-    const publicQuestions = questions?.filter(q => q.type.toLowerCase() === 'public');
+  // NEW: toggle tag selection
+  const toggleTag = (tagName: string) => {
+    setSelectedTags(prev =>
+      prev.includes(tagName)
+        ? prev.filter(t => t !== tagName)
+        : [...prev, tagName]
+    );
+    setPage(1);
+    setHasMore(true);
+  };
 
-    const indexOfLastQuestion = currentPage * questionsPerPage;
-    const indexOfFirstQuestion = indexOfLastQuestion - questionsPerPage;
-    const currentQuestions = publicQuestions?.slice(indexOfFirstQuestion, indexOfLastQuestion);
-    const totalPages = Math.ceil((publicQuestions?.length || 0) / questionsPerPage);
+  const fetchTags = async () => {
+    await dispatch(fetchTagsThunk());
+  }
 
-    const handleNext = () => {
-        if(currentPage < totalPages) setCurrentPage(prev => prev + 1);
+  useEffect(() => {
+    fetchTags()
+  }, [])
+
+  useEffect(() => {
+    setPage(1);
+    setHasMore(true);
+
+    dispatch(
+      fetchQuestionsThunk({
+        page: 1,
+        limit: LIMIT,
+        search: searchValue,
+        tags: selectedTags,
+        sort,
+      })
+    );
+  }, [dispatch, searchValue, selectedTags, sort]);
+
+  useEffect(() => {
+    if (page === 1) return;
+    if (!hasMore) return;
+
+    dispatch(
+      fetchQuestionsThunk({
+        page,
+        limit: LIMIT,
+        search: searchValue,
+        tags: selectedTags,
+        sort,
+      })
+    ).then((res: any) => {
+      if (!res.payload || res.payload.data.length < LIMIT) {
+        setHasMore(false);
+      }
+    });
+  }, [page, dispatch, searchValue, hasMore, selectedTags, sort]);
+
+  const handleScroll = useCallback(() => {
+    if (!listRef.current || loading || !hasMore) return;
+
+    const { scrollTop, scrollHeight, clientHeight } = listRef.current;
+
+    if (scrollTop + clientHeight >= scrollHeight - 5) {
+      setPage(prev => prev + 1);
     }
+  }, [loading, hasMore]);
 
-    const handlePrev = () => {
-        if(currentPage > 1) setCurrentPage(prev => prev - 1);
+  const handleAdd = () => {
+    if (!user) {
+      router.push('/login');
+      return;
     }
+    setIsModalOpen(true);
+  };
 
-    return (
-        <div className='main-container'>
-            <div className='container'>
-                <div className='heading'>
-                    <h1 className='main-heading'>Newest Questions</h1>
-                    <button className='button' onClick={handleAdd}>Ask Question</button>
-                </div>
+  const publicQuestions = questions?.filter(
+    q => q.type.toLowerCase() === 'public'
+  );
 
-                <div className='question-list'>
-                    {currentQuestions && currentQuestions.length > 0 ? (
-                        currentQuestions.map(q => (
-                           <div onClick={()=>router.push(`/question/${q.id}`)}>
-                             <Box key={q.id} className='question-item' sx={{ p: 2, mb: 1, border: '1px solid #ccc', borderRadius: 2 }}>
-                                <h3>{q.title}</h3>
-                                <div dangerouslySetInnerHTML={{ __html: q?.description }} />
-                                {/* <p>{q.description}</p> */}
-                                <p>
-                                    <strong>Author:</strong> {q.user.displayName}
-                                </p>
-                                <p>
-                                    <strong>Tags:</strong> {q.tags.map(tag => tag.name).join(', ')}
-                                </p>
-                            </Box>
-                           </div>
-                        ))
-                    ) : (
-                        <p>No public questions available</p>
-                    )}
-                </div>
+  return (
+    <div className="main-container">
+      <div className="container">
 
-                {publicQuestions && publicQuestions.length > questionsPerPage && (
-                    <Stack direction="row" spacing={2} justifyContent="center" sx={{ mt: 2 }}>
-                        <Button variant="outlined" onClick={handlePrev} disabled={currentPage === 1}>
-                            Previous
-                        </Button>
-                        <Button variant="outlined" onClick={handleNext} disabled={currentPage === totalPages}>
-                            Next
-                        </Button>
-                    </Stack>
-                )}
-            </div>
-
-            {isModalOpen && <AddQuestion onClose={() => setIsModalOpen(false)} />}
+        <div className="top-bar">
+          <h1 className="main-heading">Questions</h1>
+          <button className="ask-btn" onClick={handleAdd}>
+            Ask Question
+          </button>
         </div>
-    )
-}
 
-export default QuestionsPage
+        {/* NEW: Sort Tabs */}
+        <div className="sub-bar">
+          <div className="tabs">
+            <button
+              className={`tab ${sort === 'newest' ? 'active' : ''}`}
+              onClick={() => setSort('newest')}
+            >
+              Newest
+            </button>
+            <button
+              className={`tab ${sort === 'score' ? 'active' : ''}`}
+              onClick={() => setSort('score')}
+            >
+              Score
+            </button>
+          </div>
+
+          {/* NEW: Tag Filter */}
+          <div className="tag-filter-dropdown">
+            <button
+              className="dropdown-btn"
+              onClick={() => setDropdownOpen(prev => !prev)}
+            >
+              Tags {selectedTags.length > 0 && `(${selectedTags.length})`} ▾
+            </button>
+
+            {dropdownOpen && (
+              <div className="dropdown-menu">
+                {tagAll.map(tag => (
+                  <label key={tag.id} className="dropdown-item">
+                    <input
+                      type="checkbox"
+                      checked={selectedTags.includes(tag.name)}
+                      onChange={() => toggleTag(tag.name)}
+                    />
+                    {tag.name}
+                  </label>
+                ))}
+              </div>
+            )}
+          </div>
+
+        </div>
+
+        <div
+          ref={listRef}
+          className="question-list"
+          onScroll={handleScroll}
+          style={{ height: '600px', overflowY: 'auto', scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+        >
+          {publicQuestions?.map(q => (
+            <div
+              className="question-row"
+              key={q.id}
+            >
+              <div className="question-content" onClick={() => router.push(`/question/${q.id}`)}>
+                <h3 className="question-title">{q.title}</h3>
+                <div
+                  className="question-desc"
+                  dangerouslySetInnerHTML={{ __html: q.description }}
+                />
+
+                {/* VOTE BUTTONS */}
+                <div className="vote-container">
+                  <button
+                    className="vote-btn"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      requireAuth(() =>
+                        dispatch(upvoteQuestionThunk({ questionId: q.id, userId: user!.id }))
+                      );
+                    }}
+                  >
+                    ▲
+                  </button>
+
+                  <span className="vote-count">{q.score || 0}</span>
+                  <button
+                    className="vote-btn"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      requireAuth(() =>
+                        dispatch(downvoteQuestionThunk({ questionId: q.id, userId: user!.id }))
+                      );
+                    }}
+                  >
+                    ▼
+                  </button>
+
+                </div>
+
+                <div className="question-footer">
+                  <div className="tags">
+                    {q.tags.map(tag => (
+                      <span key={tag.id} className="tag">{tag.name}</span>
+                    ))}
+                  </div>
+                  <div className="author">
+                    asked by <strong>{q.user.displayName}</strong>
+                  </div>
+                </div>
+              </div>
+            </div>
+          ))}
+
+          {loading && (
+            <p style={{ textAlign: 'center', padding: 12 }}>
+              Loading more…
+            </p>
+          )}
+
+          {!hasMore && !loading && publicQuestions.length === 0 && (
+            <p style={{ textAlign: 'center', padding: 12 }}>
+              No questions found.
+            </p>
+          )}
+        </div>
+      </div>
+
+      {isModalOpen && <AddQuestion onClose={() => setIsModalOpen(false)} />}
+    </div >
+  );
+};
+
+export default QuestionsPage;

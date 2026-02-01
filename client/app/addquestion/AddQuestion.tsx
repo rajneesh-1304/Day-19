@@ -7,8 +7,9 @@ import { useDispatch, useSelector } from "react-redux";
 import { AppDispatch, RootState } from "@/app/redux/store";
 import { createQuestionThunk } from "@/app/redux/features/questions/questionSlice";
 import { Box, Button, FormControl, MenuItem, Snackbar, TextField } from "@mui/material";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import StarterKit from "@tiptap/starter-kit";
+import { Autocomplete, Chip } from "@mui/material";
 import {
   MenuButtonBold,
   MenuButtonItalic,
@@ -20,15 +21,31 @@ import {
 } from "mui-tiptap";
 import { useRef } from "react";
 import "./addquestion.css";
+import { fetchTagsThunk } from "../redux/features/tags/tagSlice";
 
 type AddQuestionModalProps = {
   onClose: () => void;
 };
 
+const stripHtml = (html: string) => {
+  if (!html) return "";
+  return html.replace(/<[^>]*>/g, "").trim();
+};
+
+
 const questionSchema = z.object({
   title: z.string().trim().min(20, "Title must be at least 55 characters").max(55, "Title can be 55 characters"),
-  description: z.string().trim().min(50, "Description must be at least 10 characters").max(2000, "Description max 2000 characters"),
-  tags: z.string().trim().min(1, "At least one tag is required"),
+  description: z
+    .string()
+    .refine(
+      (val) => stripHtml(val).length >= 50,
+      "Description must be at least 50 characters"
+    )
+    .refine(
+      (val) => stripHtml(val).length <= 2000,
+      "Description max 2000 characters"
+    ),
+  tags: z.array(z.string()).min(1, "At least one tag is required"),
   type: z.string().trim().min(2, "Type must be at least 2 characters"),
 });
 
@@ -38,6 +55,8 @@ export default function AddQuestion({ onClose }: AddQuestionModalProps) {
   const dispatch = useDispatch<AppDispatch>();
   const user = useSelector((state: RootState) => state.users.currentUser);
   const rteRef = useRef<RichTextEditorRef>(null);
+  const tag = useSelector((state: any) => state.tags.tags);
+  console.log(tag, 'i am tags');
 
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState("");
@@ -50,8 +69,16 @@ export default function AddQuestion({ onClose }: AddQuestionModalProps) {
     reset,
   } = useForm<QuestionFormData>({
     resolver: zodResolver(questionSchema),
-    defaultValues: { title: "", description: "", tags: "", type: "" },
+    defaultValues: { title: "", description: "", tags: [], type: "" },
   });
+
+  const tagsFetch = async () => {
+    await dispatch(fetchTagsThunk());
+  }
+
+  useEffect(() => {
+    tagsFetch();
+  }, [])
 
   const onSubmit = async (data: QuestionFormData) => {
     if (!user) return;
@@ -59,7 +86,7 @@ export default function AddQuestion({ onClose }: AddQuestionModalProps) {
     const payload = {
       title: data.title,
       description: data.description,
-      tags: data.tags.split(",").map((t) => t.trim()),
+      tags: data.tags,
       type: data.type,
       userId: user.id,
     };
@@ -136,15 +163,40 @@ export default function AddQuestion({ onClose }: AddQuestionModalProps) {
             />
 
 
-            <FormControl variant="standard">
-              <TextField
-                label="Tags (comma separated)"
-                {...register("tags")}
-                error={!!errors.tags}
-                helperText={errors.tags?.message}
-                size="small"
-              />
-            </FormControl>
+            <Controller
+              name="tags"
+              control={control}
+              render={({ field, fieldState }) => (
+                <Autocomplete
+                  multiple
+                  freeSolo
+                  options={tag.map((t: any) => t.name)}
+                  value={field.value || []}
+                  onChange={(_, newValue) => field.onChange(newValue)}
+                  renderTags={(value, getTagProps) =>
+                    value.map((option, index) => (
+                      <Chip
+                        variant="outlined"
+                        label={option}
+                        {...getTagProps({ index })}
+                        key={option}
+                      />
+                    ))
+                  }
+                  renderInput={(params) => (
+                    <TextField
+                      {...params}
+                      label="Tags"
+                      placeholder="Select or type tags"
+                      error={!!fieldState.error}
+                      helperText={fieldState.error?.message}
+                      size="small"
+                    />
+                  )}
+                />
+              )}
+            />
+
 
             <FormControl variant="standard" fullWidth>
               <TextField
@@ -155,8 +207,8 @@ export default function AddQuestion({ onClose }: AddQuestionModalProps) {
                 helperText={errors.type?.message}
                 size="small"
               >
-                <MenuItem value="public">Public</MenuItem>
-                <MenuItem value="private">Private</MenuItem>
+                <MenuItem value="PUBLIC">PUBLIC</MenuItem>
+                <MenuItem value="DRAFT">DRAFT</MenuItem>
               </TextField>
             </FormControl>
 

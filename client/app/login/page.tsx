@@ -6,7 +6,10 @@ const login = () => {
   return (
     <div className='login_container'>
       <div className='login_form'>
-        <img className='logo' src="https://download.logo.wine/logo/Stack_Overflow/Stack_Overflow-Logo.wine.png" alt="" />
+         <img
+          src="https://cdn.sstatic.net/Sites/stackoverflow/company/img/logos/so/so-icon.svg"
+          alt="Logo" className='logo'
+        />
         <div>
           <LoginForm/>
         </div>

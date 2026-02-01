@@ -1,5 +1,5 @@
 import { createSlice, createAsyncThunk, PayloadAction } from "@reduxjs/toolkit";
-import { fetchQuestions, createQuestion, getQuestionId } from "./questionService";
+import { fetchQuestions, createQuestion, getQuestionId, upvoteQuestionAPI, downvoteQuestionAPI } from "./questionService";
 
 export interface Tag {
   id: number;
@@ -21,6 +21,15 @@ export interface Question {
   tags: Tag[];
 }
 
+interface FetchQuestionsParams {
+  page: number;
+  limit: number;
+  search?: string;
+  sort?: 'score' | 'newest'; 
+  tags?: string[];        
+}
+
+
 interface QuestionsState {
   questions: Question[];
   currentQuestion: Question | null;
@@ -36,15 +45,19 @@ const initialState: QuestionsState = {
 };
 
 export const fetchQuestionsThunk = createAsyncThunk(
-  "questions/fetchAll",
-  async (_, { rejectWithValue }) => {
+  'questions/fetchAll',
+  async (
+    { page, limit, search, sort, tags }: FetchQuestionsParams,
+    { rejectWithValue }
+  ) => {
     try {
-      return await fetchQuestions();
+      return await fetchQuestions({ page, limit, search, sort, tags });
     } catch (err: any) {
-      return rejectWithValue(err?.message || "Failed to fetch questions");
+      return rejectWithValue(err?.message || 'Failed to fetch questions');
     }
   }
 );
+
 
 export const createQuestionThunk = createAsyncThunk(
   "questions/create",
@@ -63,16 +76,41 @@ export const createQuestionThunk = createAsyncThunk(
   }
 );
 
+
+
 export const getQuestionById = createAsyncThunk(
   "question/getbyId",
-  async (id: string, { rejectWithValue })=>{
+  async (id: number, { rejectWithValue }) => {
     try {
-      return await getQuestionId(id);
+      return await getQuestionId(String(id));
     } catch (err: any) {
       return rejectWithValue(err?.message || "Failed to create question");
     }
   }
 )
+
+export const upvoteQuestionThunk = createAsyncThunk(
+  'questions/upvote',
+  async ({ questionId, userId }: { questionId: number; userId: number }, { rejectWithValue }) => {
+    try {
+      return await upvoteQuestionAPI(questionId, userId);
+    } catch (err: any) {
+      return rejectWithValue(err?.message || 'Failed to upvote question');
+    }
+  }
+);
+
+export const downvoteQuestionThunk = createAsyncThunk(
+  'questions/downvote',
+  async ({ questionId, userId }: { questionId: number; userId: number }, { rejectWithValue }) => {
+    try {
+      return await downvoteQuestionAPI(questionId, userId);
+    } catch (err: any) {
+      return rejectWithValue(err?.message || 'Failed to downvote question');
+    }
+  }
+);
+
 
 const questionsSlice = createSlice({
   name: "questions",
@@ -90,10 +128,20 @@ const questionsSlice = createSlice({
         state.loading = true;
         state.error = null;
       })
-      .addCase(fetchQuestionsThunk.fulfilled, (state, action: PayloadAction<Question[]>) => {
+      .addCase(fetchQuestionsThunk.fulfilled, (state, action) => {
+        const { page, data } = action.payload;
+
+        if (page === 1) {
+          // fresh load / search
+          state.questions = data;
+        } else {
+          // infinite scroll → append
+          state.questions = [...state.questions, ...data];
+        }
+
         state.loading = false;
-        state.questions = action.payload;
       })
+
       .addCase(fetchQuestionsThunk.rejected, (state, action) => {
         state.loading = false;
         state.error = String(action.payload);

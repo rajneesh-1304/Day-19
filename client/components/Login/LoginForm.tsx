@@ -19,6 +19,7 @@ import { useDispatch } from "react-redux";
 import { AppDispatch } from "@/app/redux/store";
 import { loginThunk, registerThunk } from "@/app/redux/features/users/userSlice";
 import { useAppSelector } from "@/app/redux/hooks";
+import { signOut } from "firebase/auth";
 
 const LoginUserSchema = z.object({
   email: z.string().trim().min(1, "Email is required").email("Enter a valid email address"),
@@ -81,8 +82,8 @@ export default function LoginForm() {
         setSnackbarMessage("Login successful!");
         setSnackbarOpen(true);
         router.push('/question')
-        return;
       } else {
+        await signOut(auth);
         setSnackbarMessage("User does not exist, Register First!");
         setSnackbarOpen(true);
       }
@@ -108,8 +109,8 @@ export default function LoginForm() {
         setSnackbarMessage("Login successful!");
         setSnackbarOpen(true);
         router.push('/question')
-        return;
       } else {
+        await signOut(auth);
         setSnackbarMessage("User does not exist, Register First!");
         setSnackbarOpen(true);
       }
@@ -134,6 +135,7 @@ export default function LoginForm() {
         setSnackbarOpen(true);
         setTimeout(() => router.push('/question'), 1200);
       } else {
+        await signOut(auth);
         setSnackbarMessage(err);
         setSnackbarOpen(true);
       }

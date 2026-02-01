@@ -7,6 +7,9 @@ import { Tag } from './tags/tag.entity';
 import { QuestionModule } from './questions/question.module';
 import { AnswerModule } from './answers/answer.module';
 import { Answer } from './answers/answer.entity';
+import { QuestionVote } from './questions/questionVote.entity';
+import { AnswerVote } from './answers/answerVote.entity';
+import { TagModule } from './tags/tag.module';
 @Controller()
 class AppController {
   @Get()
@@ -22,10 +25,10 @@ class AppController {
       host: 'localhost',
       port: 5432,
       username: 'postgres',
-      password: 'admin',
+      password: '1234',
       database: 'stack',
       entities: [
-        User, Question, Tag, Answer
+        User, Question, Tag, Answer, QuestionVote, AnswerVote
       ],
       synchronize: false,
       migrations: [__dirname + '/migrations/*{.ts,.js}'],
@@ -33,6 +36,7 @@ class AppController {
     UserModule,
     QuestionModule,
     AnswerModule,
+    TagModule,
   ],
   controllers: [AppController],
 })

@@ -6,13 +6,13 @@ import {
 import { DataSource } from 'typeorm';
 import { Answer } from './answer.entity';
 import { Question } from 'src/questions/question.entity';
-import { error } from 'console';
+import { CreateAnswerDto } from './create-answer.dto';
 
 @Injectable()
 export class AnswerService {
   constructor(private readonly dataSource: DataSource) { }
 
-  async create(dto) {
+  async create(dto: CreateAnswerDto) {
     const questionRepo = this.dataSource.getRepository(Question);
     const answerRepo = this.dataSource.getRepository(Answer);
 
@@ -24,54 +24,138 @@ export class AnswerService {
       throw new NotFoundException('Question not found');
     }
 
-    const answerExist = await answerRepo.findOne({
-      where: { answer: dto.answer }
-    })
+    let parentAnswer: Answer = null;
 
-    if (answerExist) {
-      throw new ConflictException('Answer already exists');
+    // 🔹 If reply
+    if (dto.parentAnswerId) {
+      parentAnswer = await answerRepo.findOne({
+        where: { id: dto.parentAnswerId },
+      });
+
+      if (!parentAnswer) {
+        throw new NotFoundException('Parent answer not found');
+      }
     }
 
     const answer = answerRepo.create({
-      answer: dto.answer,
+      content: dto.content,
       question,
-      userId: dto.userId,
+      parentAnswer,
     });
 
     await answerRepo.save(answer);
 
     return {
-      message: 'Answer created successfully',
+      message: dto.parentAnswerId
+        ? 'Reply added successfully'
+        : 'Answer added successfully',
       answerId: answer.id,
     };
   }
 
   async getAll() {
     const answerRepo = this.dataSource.getRepository(Answer);
-    return answerRepo.find();
-  }
 
-  async getAnswerByQuestionId(id: number) {
-    const questionRepo = this.dataSource.getRepository(Question);
-    const answerRepo = this.dataSource.getRepository(Answer);
-    const isQuestion = await questionRepo.findOne({ where: { id }, relations: ['answers'] });
-    console.log(isQuestion)
-    if (!isQuestion) {
-      throw new NotFoundException("Question not found");
-    }
-
-    console.log("--------", await answerRepo.find())
-    const answer = await answerRepo.find({
-      where: { question: {id} },
+    return answerRepo.find({
+      relations: ['question', 'replies'],
       order: {
         createdAt: 'DESC',
       },
     });
+  }
 
-    if (!answer) {
-      throw new NotFoundException('Answer not found');
+  async getAnswerByQuestionId(questionId: number) {
+    const questionRepo = this.dataSource.getRepository(Question);
+    const answerRepo = this.dataSource.getRepository(Answer);
+
+    const question = await questionRepo.findOne({
+      where: { id: questionId },
+    });
+
+    if (!question) {
+      throw new NotFoundException('Question not found');
     }
-    console.log(answer);
+
+    return answerRepo.find({
+      where: {
+        question: { id: questionId },
+        parentAnswer: null,
+      },
+      relations: ['replies'],
+      order: {
+        createdAt: 'DESC',
+      },
+    });
+  }
+
+  async upvote(answerId: number) {
+    const answerRepo = this.dataSource.getRepository(Answer);
+    const answer = await answerRepo.findOne({ where: { id: answerId } });
+
+    if (!answer) throw new NotFoundException('Answer not found');
+
+    answer.upVotes += 1;
+    answer.score = answer.upVotes - answer.downVotes;
+    await answerRepo.save(answer);
+
     return answer;
   }
+
+  async downvote(answerId: number) {
+    const answerRepo = this.dataSource.getRepository(Answer);
+    const answer = await answerRepo.findOne({ where: { id: answerId } });
+
+    if (!answer) throw new NotFoundException('Answer not found');
+
+    answer.downVotes += 1;
+    answer.score = answer.upVotes - answer.downVotes;
+    await answerRepo.save(answer);
+
+    return answer;
+  }
+
+  async reply(parentAnswerId: number, dto: { answer: string; userId: number }) {
+    const answerRepo = this.dataSource.getRepository(Answer);
+
+    const parentAnswer = await answerRepo.findOne({
+      where: { id: parentAnswerId },
+      relations: ['question']
+    });
+    if (!parentAnswer) {
+      throw new NotFoundException('Parent answer not found');
+    }
+
+    const reply = answerRepo.create({
+      content: dto.answer,
+      question: parentAnswer.question,
+      parentAnswer,
+      user: { id: dto.userId },
+    });
+
+    await answerRepo.save(reply);
+
+    return {
+      message: 'Reply added successfully',
+      replyId: reply.id,
+    };
+  }
+
+ async getRepliesByAnswerId(answerId: number): Promise<Answer[]> {
+  const answerRepo = this.dataSource.getRepository(Answer);
+
+  const replies = await answerRepo.find({
+    where: { parentAnswer: { id: answerId } },
+    relations: ['user', 'replies'], 
+    order: { createdAt: 'ASC' },
+  });
+
+  for (const reply of replies) {
+    reply.replies = await this.getRepliesByAnswerId(reply.id);
+  }
+
+  return replies;
+}
+
+
+
 }

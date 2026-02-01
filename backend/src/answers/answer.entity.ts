@@ -1,43 +1,46 @@
-import {
-  Entity,
-  Column,
-  PrimaryGeneratedColumn,
-  ManyToOne,
-  JoinColumn,
-  CreateDateColumn,
-  UpdateDateColumn,
-} from 'typeorm';
-import { Question } from 'src/questions/question.entity';
+import { Question } from "src/questions/question.entity";
+import { User } from "src/users/user.entity";
+import { Column, CreateDateColumn, Entity, JoinColumn, ManyToOne, OneToMany, PrimaryGeneratedColumn } from "typeorm";
+import { AnswerVote } from "./answerVote.entity";
 
 @Entity('answers')
 export class Answer {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column()
-  answer: string;
+  @Column('text')
+  content: string;
 
   @CreateDateColumn()
   createdAt: Date;
 
-  @UpdateDateColumn()
-  updatedAt: Date;
+  @ManyToOne(() => User, (user) => user.answers, { onDelete: 'CASCADE' })
+  @JoinColumn({ name: 'userId' })
+  user: User;
 
-  @ManyToOne(() => Question, (question) => question.answers, {
-    onDelete: 'CASCADE',
-  })
+  @ManyToOne(() => Question, (q) => q.answers, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'questionId' })
   question: Question;
 
-  @Column({ nullable: true }) 
-  userId: number;
+  @ManyToOne(() => Answer, (answer) => answer.replies, {
+    nullable: true,
+    onDelete: 'CASCADE',
+  })
+  @JoinColumn({ name: 'parentAnswerId' })
+  parentAnswer: Answer;
 
-  @Column({ default: false })
-  isValid: boolean;
+  @OneToMany(() => Answer, (answer) => answer.parentAnswer)
+  replies: Answer[];
 
   @Column({ default: 0 })
-  upVote: number;
+  upVotes: number;
 
   @Column({ default: 0 })
-  downVote: number;
+  downVotes: number;
+
+  @Column({ default: 0 })
+  score: number;
+
+  @OneToMany(() => AnswerVote, (vote) => vote.answer)
+  votes: AnswerVote[];
 }

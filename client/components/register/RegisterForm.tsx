@@ -18,13 +18,14 @@ import MenuItem from "@mui/material/MenuItem";
 import Select from "@mui/material/Select";
 import { Visibility, VisibilityOff } from "@mui/icons-material";
 import { auth, provider, db, gitProvider } from "../../app/config/firebase";
-import { createUserWithEmailAndPassword, signInWithPopup } from "firebase/auth";
+import { createUserWithEmailAndPassword, signInWithPopup, signOut } from "firebase/auth";
 import { collection, addDoc, serverTimestamp, setDoc, doc, } from "firebase/firestore";
 import { useRouter } from "next/navigation";
 import { AppDispatch } from "@/app/redux/store";
-import { loginThunk, registerThunk } from "@/app/redux/features/users/userSlice";
+import { registerThunk } from "@/app/redux/features/users/userSlice";
 import { FormHelperText } from "@mui/material";
 import './register.css'
+import { useAppDispatch } from "@/app/redux/hooks";
 
 
 const RegisterUserSchema = z.object({
@@ -50,7 +51,7 @@ const RegisterUserSchema = z.object({
 type RegisterFormInputs = z.infer<typeof RegisterUserSchema>;
 
 export default function RegisterForm() {
-  const dispatch = useDispatch<AppDispatch>();
+  const dispatch = useAppDispatch();
   const [showPassword, setShowPassword] = useState(false);
   const router = useRouter();
 
@@ -82,6 +83,7 @@ export default function RegisterForm() {
       const registerResponse = await dispatch(registerThunk(registerData));
 
       if (!registerThunk.fulfilled.match(registerResponse)) {
+        await signOut(auth);
         throw new Error("Registration failed");
       } else {
         setSnackbarMessage("Account created successfully");
@@ -120,6 +122,7 @@ export default function RegisterForm() {
       const registerResponse = await dispatch(registerThunk(registerData));
 
       if (!registerThunk.fulfilled.match(registerResponse)) {
+        await signOut(auth);
         throw new Error("Registration failed");
       } else {
         setSnackbarMessage("Account created successfully");
@@ -151,7 +154,7 @@ export default function RegisterForm() {
         displayName: data.name,
         email: data.email,
       }
-      await dispatch(registerThunk(dat));
+      await dispatch(registerThunk(dat)).unwrap();
       setSnackbarMessage('User created successfully!');
       setSnackbarOpen(true);
       setTimeout(() => {
@@ -159,6 +162,7 @@ export default function RegisterForm() {
       }, 1200);
     }
     catch (err: any) {
+      console.log(err, 'error is here ')
       const message =
         err?.message?.includes("email-already-in-use") ||
           err?.response?.data?.message?.includes("Email already registered")
@@ -193,7 +197,7 @@ export default function RegisterForm() {
     <div className="main-form">
       <form className="formm" onSubmit={handleSubmit(onSubmit)}>
         <h1 className='register_heading'>Create Account</h1>
-        <Box sx={{ display: "flex", flexDirection: "column", width: 300, gap: 1, mt: 1 , padding: 1, paddingBottom: 1}}>
+        <Box sx={{ display: "flex", flexDirection: "column", width: 300, gap: 1, mt: 1, padding: 1, paddingBottom: 1 }}>
 
           <FormControl variant="standard">
             <TextField
@@ -250,11 +254,11 @@ export default function RegisterForm() {
           message={snackbarMessage}
         ></Snackbar>
       </form>
-      <Button variant="contained" sx={{ mt: 1.5,  width: 320, }} onClick={handleSignIn}>
+      <Button variant="contained" sx={{ mt: 1.5, width: 320, }} onClick={handleSignIn}>
         Sign Up With Google
       </Button>
 
-      <Button variant="contained" sx={{ mt: 1.5,  width: 320, }} onClick={handleSignInGithub}>
+      <Button variant="contained" sx={{ mt: 1.5, width: 320, }} onClick={handleSignInGithub}>
         Sign Up With Github
       </Button>
 

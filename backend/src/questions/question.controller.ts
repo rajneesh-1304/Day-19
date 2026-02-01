@@ -1,6 +1,15 @@
-import { Controller, Post, Body, Get, Query, Param } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Body,
+  Get,
+  Param,
+  Patch,
+  Query,
+} from '@nestjs/common';
 import { QuestionService } from './question.service';
 import { CreateQuestionDto } from './create-question.dto';
+import {  VoteType } from './questionVote.entity';
 
 @Controller('questions')
 export class QuestionController {
@@ -11,13 +20,67 @@ export class QuestionController {
     return this.questionService.create(dto);
   }
 
+  @Get()
+getAllQuestions(
+  @Query('page') page = 1,
+  @Query('limit') limit = 10,
+  @Query('search') search?: string,
+  @Query('sort') sort: 'score' | 'newest' = 'newest', // default newest
+  @Query('tags') tags?: string, // comma-separated tag names
+) {
+  const tagList = tags ? tags.split(',').map(t => t.trim()) : undefined;
+
+  return this.questionService.getAll({
+    page: Number(page),
+    limit: Number(limit),
+    search,
+    sort,
+    tags: tagList,
+  });
+}
+
+
   @Get(':id')
-  getQuestionById(@Param('id') id:string) {
-    return  this.questionService.getQuestionById(+id);
+  getQuestionById(
+    @Param('id') id: string,
+    @Query('userId') userId?: string,
+  ) {
+    return this.questionService.getQuestionById(
+      +id,
+      userId ? +userId : undefined,
+    );
   }
 
-  @Get()
-  getAllQuestions() {
-    return this.questionService.getAll();
+  @Patch(':id/publish')
+  publishQuestion(
+    @Param('id') id: string,
+    @Body('userId') userId: number,
+  ) {
+    return this.questionService.publish(+id, userId);
+  }
+
+  @Patch(':id/upvote')
+  upvoteQuestion(
+    @Param('id') questionId: string,
+    @Body('userId') userId: number,
+  ) {
+    return this.questionService.vote(+questionId, userId, VoteType.UP);
+  }
+
+  @Patch(':id/downvote')
+  downvoteQuestion(
+    @Param('id') questionId: string,
+    @Body('userId') userId: number,
+  ) {
+    return this.questionService.vote(+questionId, userId, VoteType.DOWN);
+  }
+
+  @Patch(':id')
+  updateQuestion(
+    @Param('id') id: string,
+    @Body('userId') userId: number, 
+    @Body() dto: Partial<CreateQuestionDto>,
+  ) {
+    return this.questionService.update(+id, userId, dto);
   }
 }

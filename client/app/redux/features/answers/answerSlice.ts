@@ -1,128 +1,104 @@
-import { createSlice, createAsyncThunk, PayloadAction } from "@reduxjs/toolkit";
-import { createAnswer, fetchAnswers, getAnswerId } from "./answerService";
+import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
+import * as answerService from './answerService';
 
-export interface User {
-  id: number;
-  displayName: string;
-}
 
-export interface Question {
-  id: number;
-}
-
-export interface Answer {
-  id: number;
-  answer: string;
-  createdAt: string;
-  updatedAt:string;
-  questionId: Question
-  userId: string;
-  upVote: number;
-  downVote:number;
-  isValid: false;
-}
-
-interface AnswersState {
-  answers: any[];
-  currentAnswer: Answer | null;
-  loading: boolean;
-  error: string | null;
-}
-
-const initialState: AnswersState = {
-  answers: [],
-  currentAnswer: null,
-  loading: false,
-  error: null,
-};
-
-export const fetchAnswerThunk = createAsyncThunk(
-  "answers/fetchAll",
-  async (_, { rejectWithValue }) => {
-    try {
-      return await fetchAnswers();
-    } catch (err: any) {
-      return rejectWithValue(err?.message || "Failed to fetch questions");
-    }
+export const fetchAnswersThunk = createAsyncThunk(
+  'answers/fetchByQuestion',
+  async (questionId: number) => {
+    const data = await answerService.getAnswersByQuestion(questionId);
+    return data;
   }
 );
 
 export const createAnswerThunk = createAsyncThunk(
-  "answer/create",
-  async (answerData, { rejectWithValue }) => {
-    try {
-      return await createAnswer(answerData);
-    } catch (err: any) {
-      return rejectWithValue(err?.message || "Failed to create question");
-    }
+  'answers/create',
+  async (payload: { content: string; userId: number; questionId: number }) => {
+    const data = await answerService.createAnswer(payload);
+    return data;
   }
 );
 
-export const getAnswerById = createAsyncThunk(
-  "answer/getbyId",
-  async (id: string, { rejectWithValue })=>{
-    try {
-      return await getAnswerId(id);
-    } catch (err: any) {
-      return rejectWithValue(err?.message || "Failed to create question");
-    }
+export const replyAnswerThunk = createAsyncThunk(
+  'answers/reply',
+  async (
+    { answerId, payload }: { answerId: number; payload: { answer: string; userId: number } }
+  ) => {
+    const data = await answerService.replyToAnswer(answerId, payload);
+    return data;
   }
-)
+);
 
-const answersSlice = createSlice({
-  name: "answers",
-  initialState,
-  reducers: {
-    clearAnswers: (state) => {
-      state.answers= [];
-      state.currentAnswer=null;
-      state.loading = false;
-      state.error = null;
-    },
+export const fetchRepliesThunk = createAsyncThunk(
+  'answers/fetchReplies',
+  async (answerId: number) => {
+    const data = await answerService.getRepliesByAnswer(answerId);
+    return { answerId, replies: data };
+  }
+);
+
+export const upvoteAnswerThunk = createAsyncThunk(
+  'answers/upvote',
+  async (answerId: number) => {
+    const data = await answerService.upvoteAnswer(answerId);
+    return { answerId, ...data }; 
+  }
+);
+
+export const downvoteAnswerThunk = createAsyncThunk(
+  'answers/downvote',
+  async (answerId: number) => {
+    const data = await answerService.downvoteAnswer(answerId);
+    return { answerId, ...data };
+  }
+);
+
+const answerSlice = createSlice({
+  name: 'answers',
+  initialState: {
+    answers: [] as any[],
+    loading: false,
+    error: null as string | null,
   },
-  extraReducers: (builder) => {
+  reducers: {},
+  extraReducers: builder => {
     builder
-      .addCase(fetchAnswerThunk.pending, (state) => {
+      .addCase(fetchAnswersThunk.pending, state => {
         state.loading = true;
         state.error = null;
       })
-      .addCase(fetchAnswerThunk.fulfilled, (state, action: PayloadAction<Question[]>) => {
+      .addCase(fetchAnswersThunk.fulfilled, (state, action) => {
         state.loading = false;
         state.answers = action.payload;
       })
-      .addCase(fetchAnswerThunk.rejected, (state, action) => {
+      .addCase(fetchAnswersThunk.rejected, (state, action) => {
         state.loading = false;
-        state.error = String(action.payload);
+        state.error = action.error.message || 'Failed to fetch answers';
       })
 
-      .addCase(createAnswerThunk.pending, (state) => {
-        state.loading = true;
-        state.error = null;
-      })
-      .addCase(createAnswerThunk.fulfilled, (state, action) => {
-        state.loading = false;
-      })
-      .addCase(createAnswerThunk.rejected, (state, action) => {
-        state.loading = false;
-
-        state.error = String(action.payload);
+      .addCase(createAnswerThunk.fulfilled, state => {
       })
 
-      .addCase(getAnswerById.pending, (state) => {
-        state.loading = true;
-        state.error = null;
+      .addCase(replyAnswerThunk.fulfilled, state => {
       })
-      .addCase(getAnswerById.fulfilled, (state, action) => {
-        console.log('action', action.payload)
-        state.answers = action.payload;
-        state.loading = false;
+
+      .addCase(fetchRepliesThunk.fulfilled, (state, action) => {
+        const { answerId, replies } = action.payload;
+        const ans = state.answers.find(a => a.id === answerId);
+        if (ans) ans.replies = replies; 
       })
-      .addCase(getAnswerById.rejected, (state, action) => {
-        state.loading = false;
-        state.error = String(action.payload);
+
+      .addCase(upvoteAnswerThunk.fulfilled, (state, action) => {
+        const { answerId, upVotes } = action.payload;
+        const ans = state.answers.find(a => a.id === answerId);
+        if (ans) ans.upVotes = upVotes;
+      })
+
+      .addCase(downvoteAnswerThunk.fulfilled, (state, action) => {
+        const { answerId, downVotes } = action.payload;
+        const ans = state.answers.find(a => a.id === answerId);
+        if (ans) ans.downVotes = downVotes;
       });
   },
 });
 
-export const { clearAnswers } = answersSlice.actions;
-export default answersSlice.reducer;
+export default answerSlice.reducer;

@@ -1,5 +1,11 @@
-import { Entity, Column, PrimaryGeneratedColumn, OneToMany, CreateDateColumn } from 'typeorm';
-import { Question } from '../questions/question.entity';
+import { Answer } from "src/answers/answer.entity";
+import { Question } from "src/questions/question.entity";
+import { Column, CreateDateColumn, Entity, OneToMany, PrimaryGeneratedColumn } from "typeorm";
+
+export enum UserRole {
+  USER = 'USER',
+  ADMIN = 'ADMIN',
+}
 
 @Entity('users')
 export class User {
@@ -12,9 +18,19 @@ export class User {
   @Column({ unique: true })
   email: string;
 
+  @Column({
+    type: 'enum',
+    enum: UserRole,
+    default: UserRole.USER,
+  })
+  role: UserRole;
+
   @CreateDateColumn()
   createdAt: Date;
 
-  @OneToMany(() => Question, (question) => question.user)
+  @OneToMany(() => Question, (q) => q.user)
   questions: Question[];
+
+  @OneToMany(() => Answer, (a) => a.user)
+  answers: Answer[];
 }

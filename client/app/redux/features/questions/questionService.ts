@@ -2,15 +2,40 @@ import axios from "axios";
 
 const BASE_URL = process.env.NEXT_PUBLIC_API_URL;
 
-export const fetchQuestions = async () => {
+interface FetchQuestionsParams {
+  page: number;
+  limit: number;
+  search?: string;
+  sort?: 'score' | 'newest'; 
+  tags?: string[];        
+}
+
+
+export const fetchQuestions = async ({
+  page,
+  limit,
+  search,
+  sort,
+  tags,
+}: FetchQuestionsParams) => {
   try {
-    const res = await axios.get(`${BASE_URL}/questions`);
+    const res = await axios.get(`${BASE_URL}/questions`, {
+      params: {
+        page,
+        limit,
+        search,
+        sort,
+        tags: tags?.join(','),
+      },
+    });
+
     return res.data;
   } catch (err: any) {
-    console.error("Error fetching questions:", err);
+    console.error('Error fetching questions:', err);
     throw err?.response?.data || err.message;
   }
 };
+
 
 export const createQuestion = async (questionData: {
   title: string;
@@ -37,3 +62,27 @@ export const getQuestionId = async (id: string) => {
     throw err?.response?.data || err.message;
   }
 }
+
+export const upvoteQuestionAPI = async (
+  questionId: number,
+  userId: number
+) => {
+  const response = await axios.patch(
+    `${BASE_URL}/questions/${questionId}/upvote`,
+    { userId }
+  );
+  return response.data;
+};
+
+
+export const downvoteQuestionAPI = async (
+  questionId: number,
+  userId: number
+) => {
+  const response = await axios.patch(
+    `${BASE_URL}/questions/${questionId}/downvote`,
+    { userId }
+  );
+  return response.data;
+};
+

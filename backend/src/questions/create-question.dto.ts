@@ -1,21 +1,21 @@
-import { IsArray, IsEnum, IsInt, IsString } from 'class-validator';
-import { Type } from 'class-transformer';
+import { IsEnum, IsOptional, IsString, IsNotEmpty } from 'class-validator';
+import { QuestionType } from './question.entity';
 
 export class CreateQuestionDto {
   @IsString()
+  @IsNotEmpty()
   title: string;
 
   @IsString()
+  @IsNotEmpty()
   description: string;
 
-  @IsString()
-  type: string;
+  @IsEnum(QuestionType)
+  @IsOptional()
+  type?: QuestionType;
 
-  @IsInt()
-  @Type(() => Number)
   userId: number;
 
-  @IsArray()
-  @IsString({ each: true })
-  tags: string[];
+  @IsOptional()
+  tags?: string[]; 
 }

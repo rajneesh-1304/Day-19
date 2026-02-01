@@ -3,10 +3,10 @@ import { QuestionController, } from './question.controller';
 import { QuestionService,} from './question.service';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Question,} from './question.entity';
-import { Answer } from 'src/answers/answer.entity';
+import { QuestionVote } from './questionVote.entity';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Question])],
+  imports: [TypeOrmModule.forFeature([Question, QuestionVote])],
   controllers: [QuestionController],
   providers: [QuestionService],
 })

@@ -1,17 +1,13 @@
-import {
-  Entity,
-  Column,
-  PrimaryGeneratedColumn,
-  ManyToOne,
-  ManyToMany,
-  JoinColumn,
-  JoinTable,
-  CreateDateColumn,
-  OneToMany,
-} from 'typeorm';
-import { User } from '../users/user.entity';
-import { Tag } from '../tags/tag.entity';
-import { Answer } from '../answers/answer.entity';
+import { Answer } from "src/answers/answer.entity";
+import { User } from "src/users/user.entity";
+import { Column, CreateDateColumn, Entity, JoinColumn, JoinTable, ManyToMany, ManyToOne, OneToMany, PrimaryGeneratedColumn } from "typeorm";
+import { QuestionVote } from "./questionVote.entity";
+import { Tag } from "src/tags/tag.entity";
+
+export enum QuestionType {
+  DRAFT = 'DRAFT',
+  PUBLIC = 'PUBLIC',
+}
 
 @Entity('questions')
 export class Question {
@@ -24,8 +20,12 @@ export class Question {
   @Column('text')
   description: string;
 
-  @Column()
-  type: string;
+  @Column({
+    type: 'enum',
+    enum: QuestionType,
+    default: QuestionType.DRAFT,
+  })
+  type: QuestionType;
 
   @CreateDateColumn()
   createdAt: Date;
@@ -45,5 +45,17 @@ export class Question {
   tags: Tag[];
 
   @OneToMany(() => Answer, (answer) => answer.question)
-    answers: Answer[];
+  answers: Answer[];
+
+  @Column({ default: 0 })
+  upVotes: number;
+
+  @Column({ default: 0 })
+  downVotes: number;
+
+  @Column({ default: 0 })
+  score: number;
+
+  @OneToMany(() => QuestionVote, (vote) => vote.question)
+  votes: QuestionVote[];
 }

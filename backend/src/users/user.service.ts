@@ -3,15 +3,15 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { Users } from './user.interface';
 import { DataSource } from 'typeorm';
 import { User } from './user.entity';
+import { UserRole } from './user.entity';
 
 @Injectable()
 export class UserService {
   constructor(private readonly dataSource: DataSource) {}
 
-  async register(data) {
+  async register(data: { displayName: string; email: string }) {
     const userRepo = this.dataSource.getRepository(User);
 
     const existingUser = await userRepo.findOne({
@@ -25,14 +25,23 @@ export class UserService {
     const user = userRepo.create({
       displayName: data.displayName,
       email: data.email,
+      role: UserRole.USER,
     });
 
     await userRepo.save(user);
 
-    return { message: 'User registered successfully' };
+    return {
+      message: 'User registered successfully',
+      user: {
+        id: user.id,
+        displayName: user.displayName,
+        email: user.email,
+        role: user.role,
+      },
+    };
   }
 
-  async login(data) {
+  async login(data: { email: string }) {
     const userRepo = this.dataSource.getRepository(User);
 
     const user = await userRepo.findOne({
@@ -49,6 +58,7 @@ export class UserService {
         id: user.id,
         displayName: user.displayName,
         email: user.email,
+        role: user.role,
       },
     };
   }
@@ -57,7 +67,12 @@ export class UserService {
     const userRepo = this.dataSource.getRepository(User);
 
     return userRepo.find({
-      select: ['id', 'displayName', 'email'],
+      select: {
+        id: true,
+        displayName: true,
+        email: true,
+        role: true,
+      },
     });
   }
 }

@@ -15,6 +15,7 @@ import usersReducer from "./features/users/userSlice";
 import searchReducer from './features/search/searchSlice'
 import questionReducer from './features/questions/questionSlice'
 import answerReducer from './features/answers/answerSlice';
+import tagsReducer from './features/tags/tagSlice'
 
 const persistConfig = {
   key: "root",
@@ -27,6 +28,7 @@ const rootReducer = combineReducers({
   search:searchReducer,
   questions: questionReducer,
   answers: answerReducer,
+  tags: tagsReducer,
 });
 
 const persistedReducer = persistReducer(persistConfig, rootReducer);

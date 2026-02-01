@@ -1,33 +1,42 @@
 import axios from "axios";
-
 const BASE_URL = process.env.NEXT_PUBLIC_API_URL;
 
-export const fetchAnswers = async () => {
-  try {
-    const res = await axios.get(`${BASE_URL}/answers`);
-    return res.data;
-  } catch (err: any) {
-    console.error("Error fetching questions:", err);
-    throw err?.response?.data || err.message;
-  }
+export const getAnswersByQuestion = async (questionId: number) => {
+  const res = await axios.get(`${BASE_URL}/answers/question/${questionId}`);
+  return res.data;
 };
 
-export const createAnswer = async (answerData: any) => {
-  try {
-    const res = await axios.post(`${BASE_URL}/answers`, answerData);
-    return res.data;
-  } catch (err: any) {
-    console.error("Error creating question:", err);
-    throw err?.response?.data || err.message;
-  }
+export const createAnswer = async (data: {
+  answer: string;
+  userId: number;
+  questionId: number;
+}) => {
+  const res = await axios.post(`${BASE_URL}/answers`, data);
+  return res.data;
 };
 
-export const getAnswerId = async (id: string) => {
-  try {
-    const res = await axios.get(`${BASE_URL}/answers/${id}`);
-    return res.data;
-  } catch (err: any) {
-    console.error("Error creating question:", err);
-    throw err?.response?.data || err.message;
+export const replyToAnswer = async (
+  answerId: number,
+  data: {
+    content: string;
+    userId: number;
   }
-}
+) => {
+  const res = await axios.post(`${BASE_URL}/answers/${answerId}/reply`, data);
+  return res.data;
+};
+
+export const upvoteAnswer = async (answerId: number) => {
+  const res = await axios.patch(`${BASE_URL}/answers/${answerId}/upvote`);
+  return res.data;
+};
+
+export const downvoteAnswer = async (answerId: number) => {
+  const res = await axios.patch(`${BASE_URL}/answers/${answerId}/downvote`);
+  return res.data;
+};
+
+export const getRepliesByAnswer = async (answerId: number) => {
+  const res = await axios.get(`${BASE_URL}/answers/${answerId}/replies`);
+  return res.data;
+};
