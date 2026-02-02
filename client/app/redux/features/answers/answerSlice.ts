@@ -38,16 +38,16 @@ export const fetchRepliesThunk = createAsyncThunk(
 
 export const upvoteAnswerThunk = createAsyncThunk(
   'answers/upvote',
-  async (answerId: number) => {
-    const data = await answerService.upvoteAnswer(answerId);
+  async ({answerId, userId}:any) => {
+    const data = await answerService.upvoteAnswer(answerId, userId);
     return { answerId, ...data }; 
   }
 );
 
 export const downvoteAnswerThunk = createAsyncThunk(
   'answers/downvote',
-  async (answerId: number) => {
-    const data = await answerService.downvoteAnswer(answerId);
+  async ({answerId, userId}: any) => {
+    const data = await answerService.downvoteAnswer(answerId, userId);
     return { answerId, ...data };
   }
 );

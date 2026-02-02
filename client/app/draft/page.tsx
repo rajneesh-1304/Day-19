@@ -2,19 +2,21 @@
 
 import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import './question.css';
+import './draft.css';
 import { useAppDispatch, useAppSelector } from '../redux/hooks';
 import {
   fetchQuestionsThunk,
   upvoteQuestionThunk,
-  downvoteQuestionThunk
+  downvoteQuestionThunk,
+  publishQuestion
 } from '../redux/features/questions/questionSlice';
 import AddQuestion from '../addquestion/AddQuestion';
 import { fetchTagsThunk } from '../redux/features/tags/tagSlice';
+import UpdateQuesion from '../updateQuestion/UpdateQuestion';
 
 const LIMIT = 5;
 
-const QuestionsPage = () => {
+const DraftPage = () => {
   const router = useRouter();
   const dispatch = useAppDispatch();
 
@@ -22,8 +24,6 @@ const QuestionsPage = () => {
   const questions = useAppSelector(state => state.questions.questions);
   const loading = useAppSelector(state => state.questions.loading);
   const searchValue = useAppSelector(state => state.search.searchValue);
-  const tagAll = useAppSelector(state => state.tags.tags);
-  const [dropdownOpen, setDropdownOpen] = useState(false);
 
   const [page, setPage] = useState(1);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -33,26 +33,6 @@ const QuestionsPage = () => {
   const [sort, setSort] = useState<'newest' | 'score'>('newest');
 
   const listRef = useRef<HTMLDivElement | null>(null);
-
-  const requireAuth = (action: () => void) => {
-    if (!user) {
-      router.push('/login');
-      return;
-    }
-    action();
-  };
-
-  // NEW: toggle tag selection
-  const toggleTag = (tagName: string) => {
-    setSelectedTags(prev =>
-      prev.includes(tagName)
-        ? prev.filter(t => t !== tagName)
-        : [...prev, tagName]
-    );
-    setPage(1);
-    setHasMore(true);
-  };
-
   const fetchTags = async () => {
     await dispatch(fetchTagsThunk());
   }
@@ -105,72 +85,42 @@ const QuestionsPage = () => {
     }
   }, [loading, hasMore]);
 
-  const handleAdd = () => {
+  const handleUpdateQuestion = () => {
+        if (!user) {
+            router.push('/login');
+            return;
+        }
+        setIsModalOpen(true);
+    }
+
+
+  const handlePublish = async (id) => {
     if (!user) {
       router.push('/login');
       return;
     }
-    setIsModalOpen(true);
+    const userId=user.id;
+    await dispatch(publishQuestion({id, userId}));
+    dispatch(
+      fetchQuestionsThunk({
+        page: 1,
+        limit: LIMIT,
+        search: searchValue,
+        tags: selectedTags,
+        sort,
+      }))
   };
 
-  
   const publicQuestions = questions?.filter(
-    question => (
-      (question.type.toLowerCase() === 'public') && (question.isDeleted === false))
-    );
-    console.log(questions, 'i am questions')
+    q => q.type.toLowerCase() === 'draft'
+  );
 
   return (
     <div className="main-container">
       <div className="container">
 
         <div className="top-bar">
-          <h1 className="main-heading">Questions</h1>
-          <button className="ask-btn" onClick={handleAdd}>
-            Ask Question
-          </button>
-        </div>
-
-        <div className="sub-bar">
-          <div className="tabs">
-            <button
-              className={`tab ${sort === 'newest' ? 'active' : ''}`}
-              onClick={() => setSort('newest')}
-            >
-              Newest
-            </button>
-            <button
-              className={`tab ${sort === 'score' ? 'active' : ''}`}
-              onClick={() => setSort('score')}
-            >
-              Score
-            </button>
-          </div>
-
-          <div className="tag-filter-dropdown">
-            <button
-              className="dropdown-btn"
-              onClick={() => setDropdownOpen(prev => !prev)}
-            >
-              Tags {selectedTags.length > 0 && `(${selectedTags.length})`} ▾
-            </button>
-
-            {dropdownOpen && (
-              <div className="dropdown-menu">
-                {tagAll.map(tag => (
-                  <label key={tag.id} className="dropdown-item">
-                    <input
-                      type="checkbox"
-                      checked={selectedTags.includes(tag.name)}
-                      onChange={() => toggleTag(tag.name)}
-                    />
-                    {tag.name}
-                  </label>
-                ))}
-              </div>
-            )}
-          </div>
-
+          <h1 className="main-heading">Draft Questions</h1>
         </div>
 
         <div
@@ -190,35 +140,6 @@ const QuestionsPage = () => {
                   className="question-desc"
                   dangerouslySetInnerHTML={{ __html: q.description }}
                 />
-                
-
-                <div className="vote-container">
-                  <button
-                    className="vote-btn"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      requireAuth(() =>
-                        dispatch(upvoteQuestionThunk({ questionId: q.id, userId: user!.id }))
-                      );
-                    }}
-                  >
-                    ▲
-                  </button>
-
-                  <span className="vote-count">{q.score || 0}</span>
-                  <button
-                    className="vote-btn"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      requireAuth(() =>
-                        dispatch(downvoteQuestionThunk({ questionId: q.id, userId: user!.id }))
-                      );
-                    }}
-                  >
-                    ▼
-                  </button>
-
-                </div>
 
                 <div className="question-footer">
                   <div className="tags">
@@ -231,6 +152,8 @@ const QuestionsPage = () => {
                   </div>
                 </div>
               </div>
+              <div><button className='publish' onClick={()=> handlePublish(q.id)}>Publish </button><button className='publish' style={{marginLeft:"5px"}} onClick={() => { handleUpdateQuestion(q.id) }}>Update</button></div>
+              {isModalOpen && <UpdateQuesion id={q.id} onClose={() => setIsModalOpen(false)} />}
             </div>
           ))}
 
@@ -248,9 +171,9 @@ const QuestionsPage = () => {
         </div>
       </div>
 
-      {isModalOpen && <AddQuestion onClose={() => setIsModalOpen(false)} />}
+      
     </div >
   );
 };
 
-export default QuestionsPage;
+export default DraftPage;

@@ -26,13 +26,13 @@ export const replyToAnswer = async (
   return res.data;
 };
 
-export const upvoteAnswer = async (answerId: number) => {
-  const res = await axios.patch(`${BASE_URL}/answers/${answerId}/upvote`);
+export const upvoteAnswer = async (answerId: number, userId: number) => {
+  const res = await axios.patch(`${BASE_URL}/answers/${answerId}/upvote`, userId);
   return res.data;
 };
 
-export const downvoteAnswer = async (answerId: number) => {
-  const res = await axios.patch(`${BASE_URL}/answers/${answerId}/downvote`);
+export const downvoteAnswer = async (answerId: number, userId: number) => {
+  const res = await axios.patch(`${BASE_URL}/answers/${answerId}/downvote`, userId);
   return res.data;
 };
 

@@ -25,7 +25,7 @@ class AppController {
       host: 'localhost',
       port: 5432,
       username: 'postgres',
-      password: '1234',
+      password: 'admin',
       database: 'stack',
       entities: [
         User, Question, Tag, Answer, QuestionVote, AnswerVote

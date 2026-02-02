@@ -1,5 +1,6 @@
 import { createSlice, createAsyncThunk, PayloadAction } from "@reduxjs/toolkit";
-import { loginUser, registerUser } from "./service";
+import { deleteUserr, fetchUsers, loginUser, registerUser } from "./service";
+import { deleteUser } from "firebase/auth";
 
 interface User {
   id: number;
@@ -9,12 +10,14 @@ interface User {
 }
 
 interface UserState {
+  users: any[];
   currentUser: User | null;
   loading: boolean;
   error: string | null;
 }
 
 const initialState: UserState = {
+  users: [],
   currentUser: null,
   loading: false,
   error: null,
@@ -31,6 +34,20 @@ export const registerThunk = createAsyncThunk(
   }
 );
 
+export const fetchUsersThunk = createAsyncThunk(
+  'users/fetchAll',
+  async (
+    { page, limit }: any,
+    { rejectWithValue }
+  ) => {
+    try {
+      return await fetchUsers({ page, limit, });
+    } catch (err: any) {
+      return rejectWithValue(err?.message || 'Failed to fetch questions');
+    }
+  }
+);
+
 export const loginThunk = createAsyncThunk(
   "auth",
   async (userData: any, { rejectWithValue }) => {
@@ -41,6 +58,17 @@ export const loginThunk = createAsyncThunk(
     }
   }
 );
+
+export const deleteUserThunk = createAsyncThunk(
+  'auth/delete',
+  async (id: any, { rejectWithValue })=> {
+    try {
+      return await deleteUserr(id);
+    } catch (err: any) {
+      return rejectWithValue(err.response.data.message);
+    }
+  }
+)
 
 
 const usersSlice = createSlice({
@@ -61,6 +89,15 @@ const usersSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
+      .addCase(fetchUsersThunk.fulfilled, (state, action) => {
+        const { user, page } = action.payload;
+        if(page === '1'){
+          state.users=user;
+        }else{
+          state.users = [...state.users, ...user];
+        }
+        state.loading = false;
+      })
       .addCase(registerThunk.pending, (state) => {
         state.loading = true;
         state.error = null;

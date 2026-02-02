@@ -58,4 +58,7 @@ export class Question {
 
   @OneToMany(() => QuestionVote, (vote) => vote.question)
   votes: QuestionVote[];
+
+  @Column({default:false})
+  isDeleted: boolean;
 }

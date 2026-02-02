@@ -86,3 +86,25 @@ export const downvoteQuestionAPI = async (
   return response.data;
 };
 
+export const updateQues = async (
+  questionId: any,
+  userId: any,
+  data: any
+) => {
+  console.log(data, 'this is data')
+  const response = await axios.patch(`${BASE_URL}/questions/${questionId}`, data);
+  return response.data;
+}
+
+export const publishQues = async (
+  questionId: any,
+  userId: any,
+) => {
+  const response = await axios.patch(`${BASE_URL}/questions/${questionId}/publish`, { userId });
+  return response.data;
+}
+
+export const deleteQuestion = async (id: number) => {
+  const response = await axios.patch(`${BASE_URL}/questions/delete/${id}`);
+  return response.data;
+}

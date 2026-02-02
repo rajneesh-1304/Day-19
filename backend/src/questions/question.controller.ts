@@ -21,12 +21,12 @@ export class QuestionController {
   }
 
   @Get()
-getAllQuestions(
+  getAllQuestions(
   @Query('page') page = 1,
   @Query('limit') limit = 10,
   @Query('search') search?: string,
-  @Query('sort') sort: 'score' | 'newest' = 'newest', // default newest
-  @Query('tags') tags?: string, // comma-separated tag names
+  @Query('sort') sort: 'score' | 'newest' = 'newest', 
+  @Query('tags') tags?: string, 
 ) {
   const tagList = tags ? tags.split(',').map(t => t.trim()) : undefined;
 
@@ -77,10 +77,17 @@ getAllQuestions(
 
   @Patch(':id')
   updateQuestion(
-    @Param('id') id: string,
-    @Body('userId') userId: number, 
-    @Body() dto: Partial<CreateQuestionDto>,
+    @Param('id') id: any,
+    @Body() dto: any,
   ) {
-    return this.questionService.update(+id, userId, dto);
+    return this.questionService.update(+id, dto);
   }
+
+  @Patch('delete/:id')
+  deleteQuestion(
+    @Param('id') id: any,
+  ) {
+    return this.questionService.delete(+id);
+  }
+
 }

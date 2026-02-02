@@ -1,5 +1,5 @@
 import { createSlice, createAsyncThunk, PayloadAction } from "@reduxjs/toolkit";
-import { fetchQuestions, createQuestion, getQuestionId, upvoteQuestionAPI, downvoteQuestionAPI } from "./questionService";
+import { fetchQuestions, createQuestion, getQuestionId, upvoteQuestionAPI, downvoteQuestionAPI, updateQues, publishQues, deleteQuestion } from "./questionService";
 
 export interface Tag {
   id: number;
@@ -111,6 +111,40 @@ export const downvoteQuestionThunk = createAsyncThunk(
   }
 );
 
+export const updateQuestion = createAsyncThunk(
+  'questions/update',
+  async( {id, userId, payload}: any,{ rejectWithValue }) => {
+    try {
+      console.log(id, userId, payload, 'this is fskadflaks')
+      return await updateQues(id, userId, payload);
+    } catch (err: any) {
+      return rejectWithValue(err?.message || 'Failed to downvote question');
+    }
+  }
+)
+
+export const publishQuestion = createAsyncThunk(
+  'questions/update',
+  async( {id, userId}: any,{ rejectWithValue }) => {
+    try {
+      return await publishQues(id, userId);
+    } catch (err: any) {
+      return rejectWithValue(err?.message || 'Failed to downvote question');
+    }
+  }
+)
+
+
+export const deleteQuestionThunk = createAsyncThunk(
+  'question/delete',
+  async(id: any, { rejectWithValue }) => {
+    try {
+      return await deleteQuestion(id);
+    } catch (err: any) {
+      return rejectWithValue(err?.message || 'Failed to downvote question');
+    }
+  }
+)
 
 const questionsSlice = createSlice({
   name: "questions",
@@ -132,10 +166,8 @@ const questionsSlice = createSlice({
         const { page, data } = action.payload;
 
         if (page === 1) {
-          // fresh load / search
           state.questions = data;
         } else {
-          // infinite scroll → append
           state.questions = [...state.questions, ...data];
         }
 
@@ -170,6 +202,12 @@ const questionsSlice = createSlice({
       .addCase(getQuestionById.rejected, (state, action) => {
         state.loading = false;
         state.error = String(action.payload);
+      })
+
+      .addCase(upvoteQuestionThunk.fulfilled, (state, action) => {
+        console.log(action.payload, 'lfjkalsjdkf')
+        // state.loading = false;
+        // state.error = String(action.payload);
       });
   },
 });

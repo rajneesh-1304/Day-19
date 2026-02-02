@@ -5,10 +5,10 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { useDispatch, useSelector } from "react-redux";
 import { AppDispatch, RootState } from "@/app/redux/store";
-import { createQuestionThunk } from "@/app/redux/features/questions/questionSlice";
 import { Box, Button, FormControl, MenuItem, Snackbar, TextField } from "@mui/material";
 import { useEffect, useState } from "react";
 import StarterKit from "@tiptap/starter-kit";
+import './update.css'
 import { Autocomplete, Chip } from "@mui/material";
 import {
   MenuButtonBold,
@@ -20,10 +20,11 @@ import {
   type RichTextEditorRef,
 } from "mui-tiptap";
 import { useRef } from "react";
-import "./addquestion.css";
 import { fetchTagsThunk } from "../redux/features/tags/tagSlice";
+import { updateQuestion } from "../redux/features/questions/questionSlice";
 
 type AddQuestionModalProps = {
+    id:number,
   onClose: () => void;
 };
 
@@ -51,7 +52,7 @@ const questionSchema = z.object({
 
 type QuestionFormData = z.infer<typeof questionSchema>;
 
-export default function AddQuestion({ onClose }: AddQuestionModalProps) {
+export default function UpdateQuesion({ id, onClose }: AddQuestionModalProps) {
   const dispatch = useDispatch<AppDispatch>();
   const user = useSelector((state: RootState) => state.users.currentUser);
   const rteRef = useRef<RichTextEditorRef>(null);
@@ -81,6 +82,7 @@ export default function AddQuestion({ onClose }: AddQuestionModalProps) {
 
   const onSubmit = async (data: QuestionFormData) => {
     if (!user) return;
+    const userId = user.id;
 
     const payload = {
       title: data.title,
@@ -91,8 +93,8 @@ export default function AddQuestion({ onClose }: AddQuestionModalProps) {
     };
 
     try {
-      await dispatch(createQuestionThunk(payload)).unwrap();
-      setSnackbarMessage("Question added successfully!");
+      await dispatch(updateQuestion({id, userId, payload})).unwrap();
+      setSnackbarMessage("Question Updated successfully!");
       setSnackbarOpen(true);
       setTimeout(onClose, 1000);
       reset();
@@ -110,7 +112,7 @@ export default function AddQuestion({ onClose }: AddQuestionModalProps) {
   return (
     <div className="modal_overlay">
       <div className="modal">
-        <h2>Add Question</h2>
+        <h2>Update Question</h2>
         <form onSubmit={handleSubmit(onSubmit)}>
           <Box sx={{ display: "flex", flexDirection: "column", width: 350, gap: 1 }}>
             <FormControl variant="standard">
@@ -122,18 +124,6 @@ export default function AddQuestion({ onClose }: AddQuestionModalProps) {
                 size="small"
               />
             </FormControl>
-
-            {/* <FormControl variant="standard">
-              <TextField
-                label="Description"
-                {...register("description")}
-                error={!!errors.description}
-                helperText={errors.description?.message}
-                size="small"
-                multiline
-                rows={4}
-              />
-            </FormControl> */}
 
             <Controller
               name="description"

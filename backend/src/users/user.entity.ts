@@ -33,4 +33,7 @@ export class User {
 
   @OneToMany(() => Answer, (a) => a.user)
   answers: Answer[];
+
+  @Column({default:false})
+  isBanned: boolean;
 }

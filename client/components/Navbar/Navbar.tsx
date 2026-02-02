@@ -23,7 +23,6 @@ const Navbar: React.FC<NavbarProps> = ({ searchValue, setSearchValue }) => {
 
   return (
     <header className="so-navbar">
-      {/* Logo */}
       <div className="so-logo" onClick={() => router.push('/')}>
         <img
           src="https://cdn.sstatic.net/Sites/stackoverflow/company/img/logos/so/so-icon.svg"
@@ -32,14 +31,12 @@ const Navbar: React.FC<NavbarProps> = ({ searchValue, setSearchValue }) => {
         <span>stack<span className="orange-text">overflow</span></span>
       </div>
 
-      {/* Navigation Links */}
       <nav className="so-nav-links">
         <a href="/">Home</a>
         <a href="/question">Questions</a>
-        <a href="#">For Teams</a>
+        <a href="/draft">Drafts Questions</a>
       </nav>
 
-      {/* Search Bar */}
       <div className="so-search">
         <input
           type="text"

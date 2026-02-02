@@ -19,7 +19,6 @@ async create(dto: CreateQuestionDto) {
   const userRepo = this.dataSource.getRepository(User);
   const tagRepo = this.dataSource.getRepository(Tag);
 
-  // 1️⃣ Get user
   const user = await userRepo.findOne({
     where: { id: dto.userId },
   });
@@ -80,9 +79,7 @@ async getAll({
     .createQueryBuilder('question')
     .leftJoinAndSelect('question.user', 'user')
     .leftJoinAndSelect('question.tags', 'tags')
-    .where('question.type = :type', { type: QuestionType.PUBLIC });
 
-  // Search filter
   if (search) {
     query.andWhere(
       `(LOWER(question.title) LIKE :search
@@ -116,6 +113,7 @@ async getAll({
       'user.displayName',
       'tags.id',
       'tags.name',
+      'question.isDeleted',
     ])
     .skip((page - 1) * limit)
     .take(limit)
@@ -248,13 +246,11 @@ async getAll({
 
 async update(
   questionId: number,
-  userId: number,
-  dto: Partial<CreateQuestionDto>, 
+  dto, 
 ) {
   const questionRepo = this.dataSource.getRepository(Question);
   const tagRepo = this.dataSource.getRepository(Tag);
 
-  // 1️⃣ Find the question
   const question = await questionRepo.findOne({
     where: { id: questionId },
     relations: ['user', 'tags'],
@@ -264,9 +260,9 @@ async update(
     throw new NotFoundException('Question not found');
   }
 
-  if (question.user.id !== userId) {
-    throw new ForbiddenException('You are not allowed to update this question');
-  }
+  // if (question.user.id !== userId) {
+  //   throw new ForbiddenException('You are not allowed to update this question');
+  // }
 
   if (dto.title) question.title = dto.title;
   if (dto.description) question.description = dto.description;
@@ -301,6 +297,22 @@ async update(
     type: question.type,
     tags: question.tags.map(t => t.name),
   };
+}
+
+async delete(questionId: number){
+  const questionRepo = this.dataSource.getRepository(Question);
+
+  const question = await questionRepo.findOne({
+    where: { id: questionId },
+    relations: ['user'],
+  });
+
+  if (!question) {
+    throw new NotFoundException('Question not found');
+  }
+
+  question.isDeleted=!question.isDeleted;
+  await questionRepo.save(question);
 }
 
 }

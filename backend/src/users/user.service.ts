@@ -1,5 +1,6 @@
 import {
   ConflictException,
+  ForbiddenException,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
@@ -52,6 +53,10 @@ export class UserService {
       throw new NotFoundException('User not found');
     }
 
+    if(user.isBanned){
+      throw new ForbiddenException('User is banned, please contact admin');
+    }
+
     return {
       message: 'User logged in successfully',
       user: {
@@ -63,16 +68,31 @@ export class UserService {
     };
   }
 
-  async getAll() {
+  async getAll({
+    page, limit
+  }) {
     const userRepo = this.dataSource.getRepository(User);
 
-    return userRepo.find({
-      select: {
-        id: true,
-        displayName: true,
-        email: true,
-        role: true,
-      },
+    const [user, total] = await userRepo.createQueryBuilder('user').skip((page-1) * limit).take(limit).getManyAndCount();
+    console.log(user);
+    return {
+      user: user,
+      total,
+      page, limit, hasMore: page* limit <total
+    };
+  }
+
+  async banUser(id: number){
+    const userRepo = this.dataSource.getRepository(User);
+    const user = await userRepo.findOne({
+      where: { id },
     });
+
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    user.isBanned=!user.isBanned;
+    await userRepo.save(user);
   }
 }

@@ -2,19 +2,17 @@
 
 import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import './question.css';
+import './adminpanel.css';
 import { useAppDispatch, useAppSelector } from '../redux/hooks';
 import {
   fetchQuestionsThunk,
-  upvoteQuestionThunk,
-  downvoteQuestionThunk
+  deleteQuestionThunk
 } from '../redux/features/questions/questionSlice';
-import AddQuestion from '../addquestion/AddQuestion';
 import { fetchTagsThunk } from '../redux/features/tags/tagSlice';
 
 const LIMIT = 5;
 
-const QuestionsPage = () => {
+const AdminPage = () => {
   const router = useRouter();
   const dispatch = useAppDispatch();
 
@@ -34,15 +32,6 @@ const QuestionsPage = () => {
 
   const listRef = useRef<HTMLDivElement | null>(null);
 
-  const requireAuth = (action: () => void) => {
-    if (!user) {
-      router.push('/login');
-      return;
-    }
-    action();
-  };
-
-  // NEW: toggle tag selection
   const toggleTag = (tagName: string) => {
     setSelectedTags(prev =>
       prev.includes(tagName)
@@ -105,12 +94,21 @@ const QuestionsPage = () => {
     }
   }, [loading, hasMore]);
 
-  const handleAdd = () => {
+  const handleDelete = async (id: any) => {
     if (!user) {
       router.push('/login');
       return;
     }
-    setIsModalOpen(true);
+    await dispatch(deleteQuestionThunk(id));
+    dispatch(
+      fetchQuestionsThunk({
+        page: 1,
+        limit: LIMIT,
+        search: searchValue,
+        tags: selectedTags,
+        sort,
+      })
+    );
   };
 
   
@@ -126,9 +124,11 @@ const QuestionsPage = () => {
 
         <div className="top-bar">
           <h1 className="main-heading">Questions</h1>
-          <button className="ask-btn" onClick={handleAdd}>
-            Ask Question
-          </button>
+
+          <div>
+            <button className='manage' style={{marginRight:"5px"}} onClick={()=>router.push('admin/user')}>Manage User</button>
+            <button className='manage' onClick={()=>router.push('admin/delques')}>Deleted Questions</button>
+          </div>
         </div>
 
         <div className="sub-bar">
@@ -175,51 +175,21 @@ const QuestionsPage = () => {
 
         <div
           ref={listRef}
-          className="question-list"
+          className="question-listt"
           onScroll={handleScroll}
           style={{ height: '600px', overflowY: 'auto', scrollbarWidth: 'none', msOverflowStyle: 'none' }}
         >
           {publicQuestions?.map(q => (
             <div
-              className="question-row"
+              className="question-roww"
               key={q.id}
             >
-              <div className="question-content" onClick={() => router.push(`/question/${q.id}`)}>
-                <h3 className="question-title">{q.title}</h3>
+              <div className="question-contentt" >
+                <h3 className="question-titlee">{q.title}</h3>
                 <div
                   className="question-desc"
                   dangerouslySetInnerHTML={{ __html: q.description }}
                 />
-                
-
-                <div className="vote-container">
-                  <button
-                    className="vote-btn"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      requireAuth(() =>
-                        dispatch(upvoteQuestionThunk({ questionId: q.id, userId: user!.id }))
-                      );
-                    }}
-                  >
-                    ▲
-                  </button>
-
-                  <span className="vote-count">{q.score || 0}</span>
-                  <button
-                    className="vote-btn"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      requireAuth(() =>
-                        dispatch(downvoteQuestionThunk({ questionId: q.id, userId: user!.id }))
-                      );
-                    }}
-                  >
-                    ▼
-                  </button>
-
-                </div>
-
                 <div className="question-footer">
                   <div className="tags">
                     {q.tags.map(tag => (
@@ -230,6 +200,7 @@ const QuestionsPage = () => {
                     asked by <strong>{q.user.displayName}</strong>
                   </div>
                 </div>
+              <button className='deleteBtnn' onClick={()=> handleDelete(q.id)}>Delete</button>
               </div>
             </div>
           ))}
@@ -248,9 +219,8 @@ const QuestionsPage = () => {
         </div>
       </div>
 
-      {isModalOpen && <AddQuestion onClose={() => setIsModalOpen(false)} />}
     </div >
   );
 };
 
-export default QuestionsPage;
+export default AdminPage;

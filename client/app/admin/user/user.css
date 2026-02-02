@@ -212,3 +212,33 @@
 .dropdown-item input {
   margin-right: 6px;
 }
+
+
+.deleteBtn{
+background-color: #b13f3f;
+  color: #fff;
+  border: 1px solid transparent;
+  padding: 8px 12px;
+  font-size: 13px;
+  border-radius: 4px;
+  font-weight: 600;
+  cursor: pointer;
+  margin-top: 5px;
+}
+
+.manage{
+    background-color: #0074cc;
+  color: #fff;
+  border: 1px solid transparent;
+  padding: 8px 12px;
+  font-size: 13px;
+  border-radius: 4px;
+  font-weight: 600;
+  cursor: pointer;
+  margin-top: 5px;
+}
+
+.question-content{
+    display: flex;
+    justify-content: space-between;
+}

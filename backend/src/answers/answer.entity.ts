@@ -41,6 +41,9 @@ export class Answer {
   @Column({ default: 0 })
   score: number;
 
+  @Column({ default: false })
+    isValid: boolean;
+
   @OneToMany(() => AnswerVote, (vote) => vote.answer)
   votes: AnswerVote[];
 }

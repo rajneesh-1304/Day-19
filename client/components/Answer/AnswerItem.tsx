@@ -21,8 +21,9 @@ const AnswerItem: React.FC<AnswerItemProps> = ({ answer, level = 0 }) => {
 
   const [showReply, setShowReply] = useState(false);
   const [replyText, setReplyText] = useState('');
+  const userId = user?.id;
+  const answerId=answer.id;
 
-  // Fetch replies when component mounts
   useEffect(() => {
     if (!answer.replies || answer.replies.length === 0) {
       dispatch(fetchRepliesThunk(answer.id));
@@ -42,12 +43,13 @@ const AnswerItem: React.FC<AnswerItemProps> = ({ answer, level = 0 }) => {
     setReplyText('');
     setShowReply(false);
 
-    // Refetch replies after posting
     dispatch(fetchRepliesThunk(answer.id));
   };
 
+  console.log(answer, 'fsdkfla')
+
   return (
-    <Box
+    <div><Box
       sx={{
         p: 2,
         mb: 1.5,
@@ -57,22 +59,20 @@ const AnswerItem: React.FC<AnswerItemProps> = ({ answer, level = 0 }) => {
         backgroundColor: '#fff',
       }}
     >
-      {/* Answer content */}
       <div dangerouslySetInnerHTML={{ __html: answer.content }} />
 
-      {/* Actions */}
       <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 1 }}>
-        <Button size="small" onClick={() => dispatch(upvoteAnswerThunk(answer.id))}>
+        <Button size="small" onClick={() => dispatch(upvoteAnswerThunk({answerId, userId}))}>
           ▲
         </Button>
         <span>{answer.score || 0}</span>
-        <Button size="small" onClick={() => dispatch(downvoteAnswerThunk(answer.id))}>
+        <Button size="small" onClick={() => dispatch(downvoteAnswerThunk({answerId, userId}))}>
           ▼
         </Button>
         <Button size="small" onClick={() => setShowReply(!showReply)}>Reply</Button>
+        {answer.isValid ? <p>✅</p>: <></>}
       </Box>
 
-      {/* Reply box */}
       {showReply && (
         <Box sx={{ mt: 1 }}>
           <textarea
@@ -87,7 +87,6 @@ const AnswerItem: React.FC<AnswerItemProps> = ({ answer, level = 0 }) => {
         </Box>
       )}
 
-      {/* Nested replies */}
       {answer.replies && answer.replies.length > 0 && (
         <Box sx={{ mt: 2 }}>
           <Divider sx={{ mb: 1 }} />
@@ -97,6 +96,8 @@ const AnswerItem: React.FC<AnswerItemProps> = ({ answer, level = 0 }) => {
         </Box>
       )}
     </Box>
+    
+    </div>
   );
 };
 

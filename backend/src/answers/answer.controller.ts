@@ -8,6 +8,7 @@ import {
 } from '@nestjs/common';
 import { AnswerService } from './answer.service';
 import { CreateAnswerDto } from './create-answer.dto';
+import { VoteType } from 'src/questions/questionVote.entity';
 
 @Controller('answers')
 export class AnswerController {
@@ -38,13 +39,17 @@ export class AnswerController {
   }
 
   @Patch(':id/upvote')
-  upvoteAnswer(@Param('id') answerId: string) {
-    return this.answerService.upvote(+answerId);
+  upvoteAnswer(@Param('id') answerId: string,
+    @Body('userId') userId: number,
+  ) {
+    return this.answerService.vote(+answerId, userId, VoteType.UP);
   }
 
   @Patch(':id/downvote')
-  downvoteAnswer(@Param('id') answerId: string) {
-    return this.answerService.downvote(+answerId);
+  downvoteAnswer(@Param('id') answerId: string,
+    @Body('userId') userId: number,
+  ) {
+    return this.answerService.vote(+answerId, userId, VoteType.DOWN);
   }
 
   @Get(':id/replies')

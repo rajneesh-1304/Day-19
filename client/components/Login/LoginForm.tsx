@@ -82,15 +82,11 @@ export default function LoginForm() {
         setSnackbarMessage("Login successful!");
         setSnackbarOpen(true);
         router.push('/question')
-      } else {
-        await signOut(auth);
-        setSnackbarMessage("User does not exist, Register First!");
-        setSnackbarOpen(true);
-      }
+      } 
     } catch (error) {
-      console.error(error);
-      setSnackbarMessage("Google sign-in failed");
-      setSnackbarOpen(true);
+      await signOut(auth);
+        setSnackbarMessage(error);
+        setSnackbarOpen(true);
     }
   };
 
@@ -116,7 +112,7 @@ export default function LoginForm() {
       }
     } catch (error) {
       console.error(error);
-      setSnackbarMessage("GitHub sign-in failed");
+      setSnackbarMessage(error);
       setSnackbarOpen(true);
     }
   }
@@ -141,14 +137,7 @@ export default function LoginForm() {
       }
 
     } catch (error: any) {
-  const message =
-    error.code === "auth/user-not-found"
-      ? "User not registered"
-      : error.code === "auth/wrong-password"
-      ? "Incorrect password"
-      : "Login failed";
-
-  setSnackbarMessage(message);
+  setSnackbarMessage(error);
   setSnackbarOpen(true);
 }
 

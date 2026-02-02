@@ -24,6 +24,8 @@ import {
 } from 'mui-tiptap';
 import StarterKit from '@tiptap/starter-kit';
 import AnswerItem from '@/components/Answer/AnswerItem';
+import { useRouter } from 'next/navigation';
+import UpdateQuesion from '@/app/updateQuestion/UpdateQuestion';
 
 const stripHtml = (html: string) =>
     html ? html.replace(/<[^>]*>/g, '').trim() : '';
@@ -42,6 +44,7 @@ const Page = () => {
     const questionId = Number(params.id);
 
     const dispatch = useAppDispatch();
+    const router = useRouter();
 
     const question = useAppSelector(s => s.questions.currentQuestion);
     const answers = useAppSelector(s => s.answers.answers);
@@ -50,6 +53,7 @@ const Page = () => {
 
     const [snackbarOpen, setSnackbarOpen] = useState(false);
     const [snackbarMessage, setSnackbarMessage] = useState('');
+    const [isModalOpen, setIsModalOpen] = useState(false);
 
     const rteRef = useRef<RichTextEditorRef>(null);
 
@@ -86,22 +90,29 @@ const Page = () => {
         }
     };
 
+    const handleUpdateQuestion = () => {
+        if (!user) {
+            router.push('/login');
+            return;
+        }
+        setIsModalOpen(true);
+    }
+
     return (
         <div className="main-container">
             <div className="container">
                 <div className="heading">
-                    <h1 className="main-heading">Question {questionId}</h1>
+                    <h1 className="main-heading">Question</h1>
                 </div>
 
-                {/* QUESTION */}
                 <Box sx={{ p: 2, mb: 2, border: '1px solid #ccc', borderRadius: 2 }}>
-                    <h3>{question?.title}</h3>
-                    <div dangerouslySetInnerHTML={{ __html: question?.description || '' }} />
-                    <p><strong>Author:</strong> {question?.user?.displayName}</p>
-                    <p><strong>Tags:</strong> {question?.tags?.map(t => t.name).join(', ')}</p>
+                    <h3 className='quesHeading'>{question?.title}</h3>
+                    <div className='quesDescription' dangerouslySetInnerHTML={{ __html: question?.description || '' }} />
+                    <p className='quesAuthor'><strong>Author:</strong> {question?.user?.displayName}</p>
+                    <p className='quesTag'><strong>Tags:</strong> {question?.tags?.map(t => t.name).join(', ')}</p>
+                    <button className='updateBtn' onClick={() => { handleUpdateQuestion(question.id) }}>Update</button>
                 </Box>
 
-                {/* ANSWER FORM */}
                 <form onSubmit={handleSubmit(onSubmit)}>
                     <Controller
                         name="answer"
@@ -160,6 +171,8 @@ const Page = () => {
                 autoHideDuration={2000}
                 message={snackbarMessage}
             />
+
+            {isModalOpen && <UpdateQuesion id={question.id} onClose={() => setIsModalOpen(false)} />}
         </div>
     );
 };

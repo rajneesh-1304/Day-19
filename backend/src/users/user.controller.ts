@@ -1,9 +1,7 @@
-import { Controller, Get, Post, Body, Delete, } from '@nestjs/common';
+import { Controller, Get, Post, Body, Delete, Patch, Param, Query, } from '@nestjs/common';
 import { UserService } from './user.service';
 import { UsersDefinition } from './DTO/user';
 import { LoginUserDto } from './DTO/login';
-import { Param } from '@nestjs/common';
-import { Patch } from '@nestjs/common';
 
 @Controller('auth')
 export class UserController {
@@ -19,8 +17,19 @@ export class UserController {
     return this.userService.register(userData);
   }
 
-  @Get()
-  getAll() {
-    return this.userService.getAll();
+  @Patch('delete/:id')
+  deleteQuestion(
+    @Param('id') id: any,
+  ) {
+    return this.userService.banUser(+id);
   }
+
+  @Get()
+  getAll(
+    @Query('page') page = 1,
+    @Query('limit') limit = 10,
+  ) {
+    return this.userService.getAll({page, limit});
+}
+
 }
