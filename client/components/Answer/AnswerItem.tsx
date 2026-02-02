@@ -21,8 +21,9 @@ const AnswerItem: React.FC<AnswerItemProps> = ({ answer, level = 0 }) => {
 
   const [showReply, setShowReply] = useState(false);
   const [replyText, setReplyText] = useState('');
+  const [showAllReplies, setShowAllReplies] = useState(false);
   const userId = user?.id;
-  const answerId=answer.id;
+  const answerId = answer.id;
 
   useEffect(() => {
     if (!answer.replies || answer.replies.length === 0) {
@@ -46,10 +47,14 @@ const AnswerItem: React.FC<AnswerItemProps> = ({ answer, level = 0 }) => {
     dispatch(fetchRepliesThunk(answer.id));
   };
 
-  console.log(answer, 'fsdkfla')
+  const isParent = level === 0;
+  const visibleReplies =
+    isParent && !showAllReplies
+      ? answer.replies?.slice(0, 3)
+      : answer.replies;
 
   return (
-    <div><Box
+    <Box
       sx={{
         p: 2,
         mb: 1.5,
@@ -62,15 +67,21 @@ const AnswerItem: React.FC<AnswerItemProps> = ({ answer, level = 0 }) => {
       <div dangerouslySetInnerHTML={{ __html: answer.content }} />
 
       <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 1 }}>
-        <Button size="small" onClick={() => dispatch(upvoteAnswerThunk({answerId, userId}))}>
+        <Button size="small" onClick={() => dispatch(upvoteAnswerThunk({ answerId, userId }))}>
           ▲
         </Button>
+
         <span>{answer.score || 0}</span>
-        <Button size="small" onClick={() => dispatch(downvoteAnswerThunk({answerId, userId}))}>
+
+        <Button size="small" onClick={() => dispatch(downvoteAnswerThunk({ answerId, userId }))}>
           ▼
         </Button>
-        <Button size="small" onClick={() => setShowReply(!showReply)}>Reply</Button>
-        {answer.isValid ? <p>✅</p>: <></>}
+
+        <Button size="small" onClick={() => setShowReply(prev => !prev)}>
+          Reply
+        </Button>
+
+        {answer.isValid && <span>✅</span>}
       </Box>
 
       {showReply && (
@@ -79,9 +90,20 @@ const AnswerItem: React.FC<AnswerItemProps> = ({ answer, level = 0 }) => {
             value={replyText}
             onChange={e => setReplyText(e.target.value)}
             placeholder="Write your reply…"
-            style={{ width: '100%', minHeight: 80, padding: 8, borderRadius: 4, border: '1px solid #ccc' }}
+            style={{
+              width: '100%',
+              minHeight: 80,
+              padding: 8,
+              borderRadius: 4,
+              border: '1px solid #ccc',
+            }}
           />
-          <Button size="small" variant="contained" sx={{ mt: 1 }} onClick={handleReplySubmit}>
+          <Button
+            size="small"
+            variant="contained"
+            sx={{ mt: 1 }}
+            onClick={handleReplySubmit}
+          >
             Submit Reply
           </Button>
         </Box>
@@ -90,14 +112,29 @@ const AnswerItem: React.FC<AnswerItemProps> = ({ answer, level = 0 }) => {
       {answer.replies && answer.replies.length > 0 && (
         <Box sx={{ mt: 2 }}>
           <Divider sx={{ mb: 1 }} />
-          {answer.replies.map((reply: any) => (
-            <AnswerItem key={reply.id} answer={reply} level={level + 1} />
+
+          {visibleReplies.map((reply: any) => (
+            <AnswerItem
+              key={reply.id}
+              answer={reply}
+              level={level + 1}
+            />
           ))}
+
+          {isParent && answer.replies.length > 3 && (
+            <Button
+              size="small"
+              sx={{ mt: 1, textTransform: 'none' }}
+              onClick={() => setShowAllReplies(prev => !prev)}
+            >
+              {showAllReplies
+                ? 'Show fewer comments'
+                : `Show ${answer.replies.length - 3} more comments`}
+            </Button>
+          )}
         </Box>
       )}
     </Box>
-    
-    </div>
   );
 };
 

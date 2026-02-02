@@ -5,7 +5,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { useDispatch, useSelector } from "react-redux";
 import { AppDispatch, RootState } from "@/app/redux/store";
-import { createQuestionThunk } from "@/app/redux/features/questions/questionSlice";
+import { createQuestionThunk, fetchQuestionsThunk } from "@/app/redux/features/questions/questionSlice";
 import { Box, Button, FormControl, MenuItem, Snackbar, TextField } from "@mui/material";
 import { useEffect, useState } from "react";
 import StarterKit from "@tiptap/starter-kit";
@@ -94,8 +94,13 @@ export default function AddQuestion({ onClose }: AddQuestionModalProps) {
       await dispatch(createQuestionThunk(payload)).unwrap();
       setSnackbarMessage("Question added successfully!");
       setSnackbarOpen(true);
-      setTimeout(onClose, 1000);
       reset();
+      dispatch(
+        fetchQuestionsThunk({
+          page: 1,
+          limit: 10,
+        }))
+      setTimeout(onClose, 1000);
     } catch (error: any) {
       setSnackbarMessage(error.message || "Error adding question");
       setSnackbarOpen(true);

@@ -102,7 +102,7 @@ const AdminPage = () => {
               <div className="question-content" >
                 <div><h3 className="question-title">{user.displayName}</h3>
                 <h3 className="question-title">{user.email}</h3></div>
-                {user.isBanned ? <button className='deleteBtn' onClick={()=> handleDelete(user.id)} >🚫 Ban</button> : <button className='deleteBtn' onClick={()=> handleDelete(user.id)} >🔓 Unban</button>}
+                {user.isBanned ? <button className='deleteBtn' onClick={()=> handleDelete(user.id)} >🔓 Unban</button> : <button className='deleteBtn' onClick={()=> handleDelete(user.id)} >🚫 Ban</button>}
               </div>
             </div>
           ))}

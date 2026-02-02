@@ -21,6 +21,11 @@ export default function AuthRedirect({
     if (!currentUser && pathname === '/') {
       router.replace('/question');
     }
+
+    if(currentUser?.role === 'ADMIN' &&  pathname === '/'){
+      router.replace('/admin');
+    }
+
   }, [currentUser, pathname, router]);
 
   return <>{children}</>;

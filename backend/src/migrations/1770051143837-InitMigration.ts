@@ -1,19 +1,15 @@
 import { MigrationInterface, QueryRunner } from "typeorm";
 
-export class InitMigration1770006495970 implements MigrationInterface {
-    name = 'InitMigration1770006495970'
+export class InitMigration1770051143837 implements MigrationInterface {
+    name = 'InitMigration1770051143837'
 
     public async up(queryRunner: QueryRunner): Promise<void> {
-        await queryRunner.query(`CREATE TYPE "public"."question_votes_vote_enum" AS ENUM('UP', 'DOWN')`);
         await queryRunner.query(`CREATE TABLE "question_votes" ("id" SERIAL NOT NULL, "vote" "public"."question_votes_vote_enum" NOT NULL, "userId" integer, "questionId" integer, CONSTRAINT "UQ_c320ad1cbdd87f967e76177a510" UNIQUE ("userId", "questionId"), CONSTRAINT "PK_4fcf37b1bcad3cc75921424dc07" PRIMARY KEY ("id"))`);
         await queryRunner.query(`CREATE TABLE "tags" ("id" SERIAL NOT NULL, "name" character varying NOT NULL, CONSTRAINT "UQ_d90243459a697eadb8ad56e9092" UNIQUE ("name"), CONSTRAINT "PK_e7dc17249a1148a1970748eda99" PRIMARY KEY ("id"))`);
-        await queryRunner.query(`CREATE TYPE "public"."questions_type_enum" AS ENUM('DRAFT', 'PUBLIC')`);
-        await queryRunner.query(`CREATE TABLE "questions" ("id" SERIAL NOT NULL, "title" character varying NOT NULL, "description" text NOT NULL, "type" "public"."questions_type_enum" NOT NULL DEFAULT 'DRAFT', "createdAt" TIMESTAMP NOT NULL DEFAULT now(), "upVotes" integer NOT NULL DEFAULT '0', "downVotes" integer NOT NULL DEFAULT '0', "score" integer NOT NULL DEFAULT '0', "userId" integer, CONSTRAINT "PK_08a6d4b0f49ff300bf3a0ca60ac" PRIMARY KEY ("id"))`);
-        await queryRunner.query(`CREATE TYPE "public"."answer_votes_vote_enum" AS ENUM('UP', 'DOWN')`);
+        await queryRunner.query(`CREATE TABLE "questions" ("id" SERIAL NOT NULL, "title" character varying NOT NULL, "description" text NOT NULL, "type" "public"."questions_type_enum" NOT NULL DEFAULT 'DRAFT', "createdAt" TIMESTAMP NOT NULL DEFAULT now(), "upVotes" integer NOT NULL DEFAULT '0', "downVotes" integer NOT NULL DEFAULT '0', "score" integer NOT NULL DEFAULT '0', "isDeleted" boolean NOT NULL DEFAULT false, "userId" integer, CONSTRAINT "PK_08a6d4b0f49ff300bf3a0ca60ac" PRIMARY KEY ("id"))`);
         await queryRunner.query(`CREATE TABLE "answer_votes" ("id" SERIAL NOT NULL, "vote" "public"."answer_votes_vote_enum" NOT NULL, "userId" integer, "answerId" integer, CONSTRAINT "UQ_7c0d88718e56e91ce473a76773e" UNIQUE ("userId", "answerId"), CONSTRAINT "PK_767f6bc508e4f2d6d08d65beb31" PRIMARY KEY ("id"))`);
-        await queryRunner.query(`CREATE TABLE "answers" ("id" SERIAL NOT NULL, "content" text NOT NULL, "createdAt" TIMESTAMP NOT NULL DEFAULT now(), "upVotes" integer NOT NULL DEFAULT '0', "downVotes" integer NOT NULL DEFAULT '0', "score" integer NOT NULL DEFAULT '0', "userId" integer, "questionId" integer, "parentAnswerId" integer, CONSTRAINT "PK_9c32cec6c71e06da0254f2226c6" PRIMARY KEY ("id"))`);
-        await queryRunner.query(`CREATE TYPE "public"."users_role_enum" AS ENUM('USER', 'ADMIN')`);
-        await queryRunner.query(`CREATE TABLE "users" ("id" SERIAL NOT NULL, "displayName" character varying NOT NULL, "email" character varying NOT NULL, "role" "public"."users_role_enum" NOT NULL DEFAULT 'USER', "createdAt" TIMESTAMP NOT NULL DEFAULT now(), CONSTRAINT "UQ_97672ac88f789774dd47f7c8be3" UNIQUE ("email"), CONSTRAINT "PK_a3ffb1c0c8416b9fc6f907b7433" PRIMARY KEY ("id"))`);
+        await queryRunner.query(`CREATE TABLE "answers" ("id" SERIAL NOT NULL, "content" text NOT NULL, "createdAt" TIMESTAMP NOT NULL DEFAULT now(), "upVotes" integer NOT NULL DEFAULT '0', "downVotes" integer NOT NULL DEFAULT '0', "score" integer NOT NULL DEFAULT '0', "isValid" boolean NOT NULL DEFAULT false, "userId" integer, "questionId" integer, "parentAnswerId" integer, CONSTRAINT "PK_9c32cec6c71e06da0254f2226c6" PRIMARY KEY ("id"))`);
+        await queryRunner.query(`CREATE TABLE "users" ("id" SERIAL NOT NULL, "displayName" character varying NOT NULL, "email" character varying NOT NULL, "role" "public"."users_role_enum" NOT NULL DEFAULT 'USER', "createdAt" TIMESTAMP NOT NULL DEFAULT now(), "isBanned" boolean NOT NULL DEFAULT false, CONSTRAINT "UQ_97672ac88f789774dd47f7c8be3" UNIQUE ("email"), CONSTRAINT "PK_a3ffb1c0c8416b9fc6f907b7433" PRIMARY KEY ("id"))`);
         await queryRunner.query(`CREATE TABLE "question_tags" ("questionsId" integer NOT NULL, "tagsId" integer NOT NULL, CONSTRAINT "PK_6404257efb2f95c6694fb7f065c" PRIMARY KEY ("questionsId", "tagsId"))`);
         await queryRunner.query(`CREATE INDEX "IDX_6ad4958737dfed6546a70bd276" ON "question_tags" ("questionsId") `);
         await queryRunner.query(`CREATE INDEX "IDX_6bb956b012373faa7b4390617a" ON "question_tags" ("tagsId") `);
@@ -44,15 +40,11 @@ export class InitMigration1770006495970 implements MigrationInterface {
         await queryRunner.query(`DROP INDEX "public"."IDX_6ad4958737dfed6546a70bd276"`);
         await queryRunner.query(`DROP TABLE "question_tags"`);
         await queryRunner.query(`DROP TABLE "users"`);
-        await queryRunner.query(`DROP TYPE "public"."users_role_enum"`);
         await queryRunner.query(`DROP TABLE "answers"`);
         await queryRunner.query(`DROP TABLE "answer_votes"`);
-        await queryRunner.query(`DROP TYPE "public"."answer_votes_vote_enum"`);
         await queryRunner.query(`DROP TABLE "questions"`);
-        await queryRunner.query(`DROP TYPE "public"."questions_type_enum"`);
         await queryRunner.query(`DROP TABLE "tags"`);
         await queryRunner.query(`DROP TABLE "question_votes"`);
-        await queryRunner.query(`DROP TYPE "public"."question_votes_vote_enum"`);
     }
 
 }

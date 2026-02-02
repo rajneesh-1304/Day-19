@@ -42,7 +42,6 @@ const QuestionsPage = () => {
     action();
   };
 
-  // NEW: toggle tag selection
   const toggleTag = (tagName: string) => {
     setSelectedTags(prev =>
       prev.includes(tagName)
@@ -113,12 +112,12 @@ const QuestionsPage = () => {
     setIsModalOpen(true);
   };
 
-  
+
   const publicQuestions = questions?.filter(
     question => (
       (question.type.toLowerCase() === 'public') && (question.isDeleted === false))
-    );
-    console.log(questions, 'i am questions')
+  );
+  console.log(questions, 'i am questions')
 
   return (
     <div className="main-container">
@@ -190,15 +189,23 @@ const QuestionsPage = () => {
                   className="question-desc"
                   dangerouslySetInnerHTML={{ __html: q.description }}
                 />
-                
+
 
                 <div className="vote-container">
                   <button
                     className="vote-btn"
                     onClick={(e) => {
                       e.stopPropagation();
-                      requireAuth(() =>
+                      requireAuth(() => {
                         dispatch(upvoteQuestionThunk({ questionId: q.id, userId: user!.id }))
+                        dispatch(fetchQuestionsThunk({
+                          page,
+                          limit: LIMIT,
+                          search: searchValue,
+                          tags: selectedTags,
+                          sort,
+                        }))
+                      }
                       );
                     }}
                   >
@@ -210,8 +217,16 @@ const QuestionsPage = () => {
                     className="vote-btn"
                     onClick={(e) => {
                       e.stopPropagation();
-                      requireAuth(() =>
+                      requireAuth(() => {
                         dispatch(downvoteQuestionThunk({ questionId: q.id, userId: user!.id }))
+                        dispatch(fetchQuestionsThunk({
+                          page,
+                          limit: LIMIT,
+                          search: searchValue,
+                          tags: selectedTags,
+                          sort,
+                        }))
+                      }
                       );
                     }}
                   >
