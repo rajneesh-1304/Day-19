@@ -128,8 +128,8 @@ const AnswerItem: React.FC<AnswerItemProps> = ({ answer, level = 0 }) => {
               onClick={() => setShowAllReplies(prev => !prev)}
             >
               {showAllReplies
-                ? 'Show fewer comments'
-                : `Show ${answer.replies.length - 3} more comments`}
+                ? 'Show fewer replies'
+                : `Show ${answer.replies.length - 3} more replies`}
             </Button>
           )}
         </Box>
